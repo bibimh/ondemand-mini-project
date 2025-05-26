@@ -1,0 +1,97 @@
+<!-- templates/profile.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ trainer.name }} 트레이너 프로필</title>
+</head>
+<body>
+    <section class="trainer-info" style="margin-bottom: 40px;">
+        <h2>{{ trainer.name }} 트레이너</h2>
+        <img src="{{ url_for('static', filename='images/' + trainer.profile_img) }}" alt="프로필 이미지" width="200">
+
+        <h3>소개</h3>
+        <p>{{ trainer.intro }}</p>
+
+        <h3>경력</h3>
+        <p>{{ trainer.experience }}</p>
+
+        <h3>회원 통계</h3>
+        <h4>연령별</h4>
+        <ul>
+            {% for age, count in trainer.stats.age.items() %}
+                <li>{{ age }}: {{ count }}명</li>
+            {% endfor %}
+        </ul>
+
+        <h4>성별</h4>
+        <ul>
+            {% for gender, count in trainer.stats.gender.items() %}
+                <li>{{ gender }}: {{ count }}명</li>
+            {% endfor %}
+        </ul>
+
+        <hr>
+        <form action="/consult" method="get">
+            <input type="hidden" name="trainer_id" value="{{ trainer_id }}">
+            <button type="submit">💬 상담 신청하기</button>
+        </form>
+
+        <hr>
+        {% if is_admin %}
+            <button onclick="alert('수정하기')">프로필 수정</button>
+        {% endif %}
+    </section>
+
+    <!-- 후기 -->
+    <section class="review-summary">
+        <p>후기 ⭐{{ avg_rating }} (총 {{ review_count }}개의 리뷰)</p>
+
+        <!-- 필터 버튼 자리 예약 -->
+        <!-- 추후 정렬 기능 구현 시 -->
+        {# <a href="?sort=high">높은 별점순</a> | <a href="?sort=low">낮은 별점순</a> #}
+    </section>
+
+    <section class="review-form" style="margin-bottom: 40px;">
+        <hr>
+        <h4>리뷰 작성하기</h4>
+        <form method="POST">
+            <div class="form-group">
+                <label>별점:
+                    <select name="rating">
+                        <option value="5">5점</option>
+                        <option value="4">4점</option>
+                        <option value="3">3점</option>
+                        <option value="2">2점</option>
+                        <option value="1">1점</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label>후기:</label><br>
+                <textarea name="review" rows="4" cols="50" required></textarea><br><br>
+            </div>
+
+            <!-- 사진 업로드는 나중에 구현 예정 -->
+            <!-- <input type="file" name="image"> -->
+
+            <button type="submit">리뷰 등록</button>
+        </form>
+    </section>
+
+    <section class="review-list">
+        <br>
+        {% for review in reviews %}
+            <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
+                <p>별점: {{ review.rating }} / 5</p>
+                <p>{{ review.text }}</p>
+                {% if review.image %}
+                    <img src="{{ url_for('static', filename='images/' + review.image) }}" width="200">
+                {% endif %}
+            </div>
+        {% endfor %}
+    </section>
+
+</body>
+</html>

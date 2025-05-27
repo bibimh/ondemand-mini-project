@@ -1,9 +1,11 @@
 from flask import Flask, render_template, request, redirect, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
+from routes.consultation_routes import consultation_bp
 
 app = Flask(__name__)
 app.secret_key = 'a9f3b7d2e1c4f6a8'
+app.register_blueprint(consultation_bp)
 
 # DB 연결
 def get_db():
@@ -15,6 +17,7 @@ def get_db():
         charset='utf8mb4',
         cursorclass=pymysql.cursors.DictCursor
     )
+
 
 # 로그인 페이지
 @app.route('/')

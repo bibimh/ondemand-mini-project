@@ -11,39 +11,44 @@ def profile(trainer_id):
     conn.ping(reconnect=True)  # 끊어진 연결 대비
 
     with conn.cursor() as cursor:
+        # 트레이너 정보 가져오기
         cursor.execute("SELECT * FROM trainers WHERE trainer_id = %s", (trainer_id,))
         trainer = cursor.fetchone()
         if not trainer:
             abort(404)
 
-        # === 이미지 가져오기 ===
-        cursor.execute("""
-            SELECT image_data FROM site_images
-            WHERE name LIKE %s
-            ORDER BY uploaded_at ASC
-        """, (f"%트레이너{trainer_id}%",))
-        image_rows = cursor.fetchall()
+        # 트레이너 이미지 가져오기
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT image_data FROM site_images
+                WHERE name LIKE %s
+                ORDER BY uploaded_at ASC
+            """, (f'트레이너{trainer_id}%',))
+            image_rows = cursor.fetchall()
 
-    image_sources = [
-        f"data:image/jpeg;base64,{base64.b64encode(row['image_data']).decode('utf-8')}"
-        for row in image_rows
-    ]
+        # base64로 인코딩
+        image_sources = []
+        for row in image_rows:
+            encoded = base64.b64encode(row['image_data']).decode('utf-8')
+            image_sources.append(f"data:image/jpeg;base64,{encoded}")
 
-    # === 리뷰 처리 ===
-    with conn.cursor() as cursor:
+        # 리뷰 작성 처리 (POST 요청)
         if request.method == 'POST':
             new_rating = int(request.form['rating'])
             new_text = request.form['review']
-            user_id = 1
+            user_id = 1  # 로그인 기능 붙이면 session에서 가져올 예정
+
             cursor.execute("""
                 INSERT INTO reviews (user_id, trainer_id, rating, comment)
                 VALUES (%s, %s, %s, %s)
             """, (user_id, trainer_id, new_rating, new_text))
             conn.commit()
 
+        # 리뷰 목록 + 작성자 이름 가져오기
         cursor.execute("""
             SELECT r.rating, r.comment, r.created_at, u.login_id
-            FROM reviews r JOIN users u ON r.user_id = u.user_id
+            FROM reviews r
+            JOIN users u ON r.user_id = u.user_id
             WHERE r.trainer_id = %s
             ORDER BY r.created_at DESC
         """, (trainer_id,))
@@ -53,9 +58,11 @@ def profile(trainer_id):
     review_count = len(reviews)
     avg_rating = round(sum(r["rating"] for r in reviews) / review_count, 1) if review_count > 0 else 0.0
 
-    # === 지난달 통계 계산 ===
+        # === 지난달 통계 계산 ===
     today = datetime.today()
     last_month = today.replace(day=1) - timedelta(days=1)
+    year = last_month.year
+    month = last_month.month
 
     with conn.cursor() as cursor:
         cursor.execute("""
@@ -63,7 +70,7 @@ def profile(trainer_id):
             FROM trainer_member_stats
             WHERE trainer_id = %s AND year = %s AND month = %s
             GROUP BY gender, age_group
-        """, (trainer_id, last_month.year, last_month.month))
+        """, (trainer_id, year, month))
         rows = cursor.fetchall()
 
     gender_counter = defaultdict(int)
@@ -78,6 +85,7 @@ def profile(trainer_id):
     gender_data = {k: round(v / total_count * 100, 1) for k, v in gender_counter.items()} if total_count else {}
     age_data = {k: round(v / total_count * 100, 1) for k, v in age_counter.items()} if total_count else {}
 
+    is_admin = True  # 로그인 연동되면 조건에 따라 설정
     return render_template(
         'profile.html', 
         trainer=trainer,

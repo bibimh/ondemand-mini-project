@@ -1,11 +1,8 @@
-from flask import Flask, render_template
+from flask import Flask
+from routes.mainpage_route import mainpage_bp  # mainpage의 Blueprint를 불러옴
 
 app = Flask(__name__)
-
-# 테스트
-@app.route('/')
-def index():
-    return render_template('index.html')  # templates/index.html 불러오기
+app.register_blueprint(mainpage_bp)  # Blueprint 등록
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True)  # 서버 실행

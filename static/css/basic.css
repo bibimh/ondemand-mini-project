@@ -1,0 +1,31 @@
+.box1 img:hover {
+    content: url('/static/images/trainer1_hover.jpg');
+}
+.box2 img:hover {
+    content: url('/static/images/trainer2_hover.jpg');
+}
+.box3 img:hover {
+    content: url('/static/images/trainer3_hover.jpg');
+}
+.box4 img:hover {
+    content: url('/static/images/trainer4_hover.jpg');
+}
+.box5 img:hover {
+    content: url('/static/images/trainer5_hover.jpg');
+}
+.box6 img:hover {
+    content: url('/static/images/trainer6_hover.jpg');
+}
+.box7 img:hover {
+    content: url('/static/images/trainer7_hover.jpg');
+}
+.box8 img:hover {
+    content: url('/static/images/trainer8_hover.jpg');
+}
+.box9 img:hover {
+    content: url('/static/images/trainer9_hover.jpg');
+}
+.box10 img:hover {
+    content: url('/static/images/trainer10_hover.jpg');
+}
+/* ... 나머지도 동일하게 */

@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상담 신청 - Fit Pick</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .trainer-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .trainer-info h2 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .calendar-container {
+            margin-top: 10px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            background: #f8f9fa;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .time-slot {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            font-weight: 500;
+        }
+
+        .time-slot:hover:not(.disabled) {
+            border-color: #667eea;
+            background: #f8f9ff;
+            transform: translateY(-2px);
+        }
+
+        .time-slot.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .time-slot.disabled {
+            background: #f8f9fa;
+            color: #6c757d;
+            cursor: not-allowed;
+            border-color: #dee2e6;
+        }
+
+        .people-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .people-option {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .people-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .people-option.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #5a6268;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #667eea;
+            font-size: 1.5em;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .modal-btn:hover {
+            background: #5a6fd8;
+        }
+
+        .modal-btn.cancel {
+            background: #6c757d;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #5a6268;
+        }
+
+        .selection-summary {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .selection-summary h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        #successModal .modal-content {
+            padding: 40px;
+        }
+
+        #successModal .modal-content h3 {
+            font-size: 1.8em;
+            margin-bottom: 25px;
+        }
+
+        #successModal .modal-content p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            color: #555;
+        }
+
+        #successModal .modal-btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        #successModal .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .time-slots {
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                gap: 8px;
+            }
+            
+            .people-selector {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/trainer/{{ trainer.trainer_id }}" class="back-btn">← 트레이너 프로필로 돌아가기</a>
+        
+        <div class="header">
+            <h1>🏋️‍♂️ 상담 신청</h1>
+        </div>
+
+        <div class="trainer-info">
+            <h2>{{ trainer.tname }} 트레이너</h2>
+            <p>{{ trainer.specialty if trainer.specialty else '전문 트레이너' }}</p>
+        </div>
+
+        <form id="consultationForm">
+            <input type="hidden" id="trainerId" value="{{ trainer.trainer_id }}">
+            
+            <div class="form-group">
+                <label for="consultationDate">📅 상담 희망 날짜</label>
+                <div class="calendar-container">
+                    <input type="date" id="consultationDate" name="consultationDate" required 
+                           min="{{ today }}" max="{{ max_date }}">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="timeSlots">🕐 희망 시간</label>
+                <div class="time-slots" id="timeSlots">
+                    <!-- 시간 슬롯들이 JavaScript로 동적 생성됩니다 -->
+                </div>
+                <input type="hidden" id="selectedTime" name="selectedTime">
+            </div>
+
+            <div class="form-group">
+                <label for="numPeople">👥 인원 수</label>
+                <div class="people-selector" id="peopleSelector">
+                    <div class="people-option selected" data-value="1">1명</div>
+                    <div class="people-option" data-value="2">2명</div>
+                    <div class="people-option" data-value="3">3명</div>
+                    <div class="people-option" data-value="4">4명</div>
+                    <div class="people-option" data-value="5">5명</div>
+                </div>
+                <input type="hidden" id="numPeople" name="numPeople" value="1">
+            </div>
+
+            <div class="selection-summary" id="selectionSummary" style="display: none;">
+                <h4>선택한 상담 정보</h4>
+                <div id="summaryContent"></div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                💪 상담 신청하기
+            </button>
+        </form>
+    </div>
+
+    <!-- 확인 모달 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h3>🤝 상담 신청 확인</h3>
+            <p id="confirmDetails"></p>
+            <div style="margin-top: 20px;">
+                <button onclick="confirmConsultation()" class="modal-btn">✅ 신청 확정</button>
+                <button onclick="closeModal()" class="modal-btn cancel">❌ 취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 완료 모달 -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <h3>🎉 상담 신청 완료!</h3>
+            <p>
+                <strong>{{ trainer.tname }} 트레이너</strong>와의 상담 신청이<br>
+                성공적으로 완료되었습니다!<br><br>
+                📞 트레이너가 곧 연락드릴 예정입니다.<br>
+                📅 상담 전날 리마인더 문자를 보내드려요.<br><br>
+                <em>건강한 몸만들기, 함께 시작해요! 💪</em>
+            </p>
+            <button onclick="goToMain()" class="modal-btn">메인 페이지로 이동</button>
+        </div>
+    </div>
+
+    <script>
+        var timeSlots = [
+            '09:00', '10:00', '11:00', '12:00', 
+            '13:00', '14:00', '15:00', '16:00', 
+            '17:00', '18:00', '19:00', '20:00'
+        ];
+
+        var selectedTimeSlot = null;
+        var reservedTimes = [];
+        var selectedDate = '';
+        var selectedTime = '';
+        var selectedPeople = 1;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var today = new Date().toISOString().split('T')[0];
+            document.getElementById('consultationDate').value = today;
+            selectedDate = today;
+            
+            fetchReservedTimes(today);
+            setupPeopleSelector();
+        });
+
+        document.getElementById('consultationDate').addEventListener('change', function() {
+            selectedDate = this.value;
+            if (selectedDate) {
+                fetchReservedTimes(selectedDate);
+                resetTimeSelection();
+                updateSummary();
+            }
+        });
+
+        function fetchReservedTimes(date) {
+            var trainerId = document.getElementById('trainerId').value;
+            
+            fetch('/api/reserved-times/' + trainerId + '/' + date)
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
+                    reservedTimes = data.reserved_times || [];
+                    updateTimeSlots();
+                })
+                .catch(function(error) {
+                    console.error('Error:', error);
+                    reservedTimes = [];
+                    updateTimeSlots();
+                });
+        }
+
+        function updateTimeSlots() {
+            var timeSlotsContainer = document.getElementById('timeSlots');
+            timeSlotsContainer.innerHTML = '';
+
+            for (var i = 0; i < timeSlots.length; i++) {
+                var time = timeSlots[i];
+                var timeSlot = document.createElement('div');
+                timeSlot.className = 'time-slot';
+                timeSlot.textContent = time;
+                
+                var isReserved = reservedTimes.indexOf(time) !== -1;
+                if (isReserved) {
+                    timeSlot.classList.add('disabled');
+                    timeSlot.title = '예약 불가 (이미 예약됨)';
+                } else {
+                    timeSlot.addEventListener('click', function(t) {
+                        return function() { selectTimeSlot(this, t); };
+                    }(time));
+                    timeSlot.title = '클릭하여 선택';
+                }
+                
+                timeSlotsContainer.appendChild(timeSlot);
+            }
+        }
+
+        function selectTimeSlot(element, time) {
+            if (selectedTimeSlot) {
+                selectedTimeSlot.classList.remove('selected');
+            }
+            
+            element.classList.add('selected');
+            selectedTimeSlot = element;
+            selectedTime = time;
+            document.getElementById('selectedTime').value = time;
+            
+            updateSummary();
+            updateSubmitButton();
+        }
+
+        function setupPeopleSelector() {
+            var peopleOptions = document.querySelectorAll('.people-option');
+            for (var i = 0; i < peopleOptions.length; i++) {
+                peopleOptions[i].addEventListener('click', function() {
+                    for (var j = 0; j < peopleOptions.length; j++) {
+                        peopleOptions[j].classList.remove('selected');
+                    }
+                    
+                    this.classList.add('selected');
+                    selectedPeople = parseInt(this.dataset.value);
+                    document.getElementById('numPeople').value = selectedPeople;
+                    
+                    updateSummary();
+                });
+            }
+        }
+
+        function updateSummary() {
+            var summaryDiv = document.getElementById('selectionSummary');
+            var summaryContent = document.getElementById('summaryContent');
+            
+            if (selectedDate && selectedTime) {
+                var date = new Date(selectedDate);
+                var dateStr = date.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    weekday: 'long'
+                });
+                
+                summaryContent.innerHTML = 
+                    '<strong>날짜:</strong> ' + dateStr + '<br>' +
+                    '<strong>시간:</strong> ' + selectedTime + '<br>' +
+                    '<strong>인원:</strong> ' + selectedPeople + '명';
+                
+                summaryDiv.style.display = 'block';
+            } else {
+                summaryDiv.style.display = 'none';
+            }
+        }
+
+        function updateSubmitButton() {
+            var submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = !(selectedDate && selectedTime);
+        }
+
+        function resetTimeSelection() {
+            if (selectedTimeSlot) {
+                selectedTimeSlot.classList.remove('selected');
+                selectedTimeSlot = null;
+            }
+            selectedTime = '';
+            document.getElementById('selectedTime').value = '';
+            updateSubmitButton();
+        }
+
+        document.getElementById('consultationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            var trainerName = '{{ trainer.tname }}';
+            var date = new Date(selectedDate);
+            var dateStr = date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long', 
+                day: 'numeric',
+                weekday: 'long'
+            });
+            
+            var confirmDetails = 
+                '<strong>트레이너:</strong> ' + trainerName + '<br>' +
+                '<strong>날짜:</strong> ' + dateStr + '<br>' +
+                '<strong>시간:</strong> ' + selectedTime + '<br>' +
+                '<strong>인원:</strong> ' + selectedPeople + '명<br><br>' +
+                '위 정보로 상담 신청을 진행하시겠습니까?';
+            
+            document.getElementById('confirmDetails').innerHTML = confirmDetails;
+            document.getElementById('confirmModal').style.display = 'block';
+        });
+
+        function confirmConsultation() {
+            var formData = {
+                trainer_id: document.getElementById('trainerId').value,
+                consultation_date: selectedDate,
+                consultation_time: selectedTime,
+                num_people: selectedPeople
+            };
+
+            var confirmBtn = document.querySelector('#confirmModal .modal-btn');
+            var originalText = confirmBtn.textContent;
+            confirmBtn.textContent = '처리 중...';
+            confirmBtn.disabled = true;
+
+            fetch('/api/create-consultation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(function(response) { return response.json(); })
+            .then(function(data) {
+                document.getElementById('confirmModal').style.display = 'none';
+                if (data.success) {
+                    updateReservedTime(selectedTime);
+                    document.getElementById('successModal').style.display = 'block';
+                } else {
+                    alert('❌ 상담 신청 실패: ' + (data.message || '알 수 없는 오류'));
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('❌ 상담 신청 중 오류가 발생했습니다.');
+                document.getElementById('confirmModal').style.display = 'none';
+            })
+            .finally(function() {
+                confirmBtn.textContent = originalText;
+                confirmBtn.disabled = false;
+            });
+        }
+
+        function updateReservedTime(time) {
+            var timeSlots = document.querySelectorAll('.time-slot');
+            for (var i = 0; i < timeSlots.length; i++) {
+                if (timeSlots[i].textContent === time) {
+                    timeSlots[i].classList.add('disabled');
+                    timeSlots[i].classList.remove('selected');
+                    timeSlots[i].title = '예약 불가 (이미 예약됨)';
+                    timeSlots[i].onclick = null;
+                }
+            }
+            
+            selectedTimeSlot = null;
+            selectedTime = '';
+            document.getElementById('selectedTime').value = '';
+            updateSubmitButton();
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+        }
+
+        function goToMain() {
+            window.location.href = '/';
+        }
+
+        function goToProfile() {
+            window.location.href = '/trainer/' + document.getElementById('trainerId').value;
+        }
+
+        window.addEventListener('click', function(event) {
+            var confirmModal = document.getElementById('confirmModal');
+            var successModal = document.getElementById('successModal');
+            
+            if (event.target === confirmModal) {
+                confirmModal.style.display = 'none';
+            }
+            if (event.target === successModal) {
+                successModal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

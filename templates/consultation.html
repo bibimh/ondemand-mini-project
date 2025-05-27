@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상담 신청 - FitPick</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/consultation.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><a href="/">FitPick</a></h1>
+            <nav>
+                <a href="/">홈</a>
+                <a href="/">트레이너</a>
+                <a href="/">센터 소개</a>
+                {% if session.user_id %}
+                    <span>{{ session.user_name }}님</span>
+                    <a href="/logout">로그아웃</a>
+                {% else %}
+                    <a href="/login">로그인</a>
+                {% endif %}
+            </nav>
+        </header>
+
+        <main>
+            <div class="consultation-form-container">
+                <h2>상담 신청</h2>
+                
+                <!-- 트레이너 정보 표시 -->
+                <div class="trainer-info">
+                    <img src="{{ trainer.image_url or '/static/images/default-trainer.png' }}" alt="{{ trainer.tname }}">
+                    <div>
+                        <h3>{{ trainer.tname }} 트레이너</h3>
+                        <p>{{ trainer.specialty }}</p>
+                    </div>
+                </div>
+
+                <form id="consultationForm" method="POST" action="/api/consultation">
+                    <input type="hidden" name="trainer_id" value="{{ trainer.trainer_id }}">
+                    
+                    <!-- 날짜 선택 -->
+                    <div class="form-group">
+                        <label for="consultation_date">상담 희망 날짜</label>
+                        <input type="text" id="consultation_date" name="consultation_date" required>
+                        <div class="available-times" id="availableTimes" style="display: none;">
+                            <label>가능한 시간대 선택</label>
+                            <div class="time-slots">
+                                <!-- 시간대는 JavaScript로 동적 생성 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 인원 수 -->
+                    <div class="form-group">
+                        <label for="num_people">상담 인원</label>
+                        <select id="num_people" name="num_people" required>
+                            <option value="1">1명</option>
+                            <option value="2">2명</option>
+                            <option value="3">3명</option>
+                            <option value="4">4명</option>
+                        </select>
+                    </div>
+
+                    <!-- 이름 -->
+                    <div class="form-group">
+                        <label for="name">이름</label>
+                        <input type="text" id="name" name="name" value="{{ session.user_name or '' }}" required>
+                    </div>
+
+                    <!-- 연락처 -->
+                    <div class="form-group">
+                        <label for="phone">연락처</label>
+                        <input type="tel" id="phone" name="phone" value="{{ session.user_phone or '' }}" 
+                               pattern="[0-9]{3}-[0-9]{4}-[0-9]{4}" 
+                               placeholder="010-1234-5678" required>
+                    </div>
+
+                    <!-- 상담 내용 -->
+                    <div class="form-group">
+                        <label for="consultation_content">상담 내용 (선택)</label>
+                        <textarea id="consultation_content" name="consultation_content" rows="4" 
+                                  placeholder="상담받고 싶은 내용을 간단히 적어주세요."></textarea>
+                    </div>
+
+                    <button type="submit" class="submit-btn">상담 신청하기</button>
+                </form>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2024 FitPick. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ko.js"></script>
+    <script src="{{ url_for('static', filename='js/consultation.js') }}"></script>
+</body>
+</html>

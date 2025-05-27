@@ -4,18 +4,28 @@
 <html>
 <head>
     <title>{{ trainer.name }} 트레이너 프로필</title>
+    <style>
+        .trainer-intro {
+            white-space: pre-line;
+            line-height: 1.6;
+        }
+    </style>
 </head>
 <body>
     <section class="trainer-info" style="margin-bottom: 40px;">
-        <h2>{{ trainer.name }} 트레이너</h2>
-        <img src="{{ url_for('static', filename='images/' + trainer.profile_img) }}" alt="프로필 이미지" width="200">
+        <h2>{{ trainer.tname }} 트레이너</h2>
+        <img src="{{ url_for('static', filename='images/' + trainer.image_url) }}" alt="프로필 이미지" width="200">
 
         <h3>소개</h3>
-        <p>{{ trainer.intro }}</p>
+        <p class="trainer-intro">{{ trainer.introduce }}</p>
 
         <h3>경력</h3>
-        <p>{{ trainer.experience }}</p>
+        <p>{{ trainer.experience }}년</p>
 
+        <h3>전문 분야</h3>
+        <p>{{ trainer.specialty }}</p>
+
+        {#
         <h3>회원 통계</h3>
         <h4>연령별</h4>
         <ul>
@@ -23,13 +33,14 @@
                 <li>{{ age }}: {{ count }}명</li>
             {% endfor %}
         </ul>
-
+ 
         <h4>성별</h4>
         <ul>
             {% for gender, count in trainer.stats.gender.items() %}
                 <li>{{ gender }}: {{ count }}명</li>
             {% endfor %}
         </ul>
+        #}
 
         <hr>
         <form action="/consult" method="get">
@@ -46,10 +57,8 @@
     <!-- 후기 -->
     <section class="review-summary">
         <p>후기 ⭐{{ avg_rating }} (총 {{ review_count }}개의 리뷰)</p>
-
-        <!-- 필터 버튼 자리 예약 -->
         <!-- 추후 정렬 기능 구현 시 -->
-        {# <a href="?sort=high">높은 별점순</a> | <a href="?sort=low">낮은 별점순</a> #}
+        <!-- 필터 버튼 자리 예약 -->
     </section>
 
     <section class="review-form" style="margin-bottom: 40px;">
@@ -84,11 +93,9 @@
         <br>
         {% for review in reviews %}
             <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;">
-                <p>별점: {{ review.rating }} / 5</p>
-                <p>{{ review.text }}</p>
-                {% if review.image %}
-                    <img src="{{ url_for('static', filename='images/' + review.image) }}" width="200">
-                {% endif %}
+                <p>작성자: {{ review.login_id }}</p>
+                <p>⭐ {{ review.rating }}</p>
+                <p>{{ review.comment }}</p>
             </div>
         {% endfor %}
     </section>

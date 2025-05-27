@@ -39,17 +39,31 @@ def get_db():
 
 # 트레이너 관련 함수들
 def get_all_trainers():
-    """모든 트레이너 목록 조회"""
+    """모든 활성화된 트레이너 목록 조회 (is_hidden = 0만)"""
     with get_db() as conn:
         with conn.cursor() as cursor:
-            cursor.execute("SELECT * FROM trainers ORDER BY trainer_id")
+            cursor.execute("""
+                SELECT * FROM trainers 
+                WHERE is_hidden = 0 
+                ORDER BY trainer_id
+            """)
             return cursor.fetchall()
 
 def get_trainer_by_id(trainer_id):
-    """특정 트레이너 정보 조회"""
+    """특정 트레이너 정보 조회 (숨김 처리 여부 상관없이)"""
     with get_db() as conn:
         with conn.cursor() as cursor:
             cursor.execute("SELECT * FROM trainers WHERE trainer_id = %s", (trainer_id,))
+            return cursor.fetchone()
+
+def get_active_trainer_by_id(trainer_id):
+    """특정 활성화된 트레이너 정보 조회 (is_hidden = 0만)"""
+    with get_db() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT * FROM trainers 
+                WHERE trainer_id = %s AND is_hidden = 0
+            """, (trainer_id,))
             return cursor.fetchone()
 
 # 예약 관련 함수들

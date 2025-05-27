@@ -7,7 +7,7 @@ import os
 # 프로젝트 루트 디렉토리를 sys.path에 추가
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from db.db import get_trainer_by_id, get_reserved_times, create_reservation
+from db.db import get_trainer_by_id, get_active_trainer_by_id, get_reserved_times, create_reservation
 
 consultation_bp = Blueprint('consultation', __name__)
 
@@ -18,14 +18,16 @@ def consultation_page(trainer_id):
     if 'user_id' not in session:
         return redirect(url_for('auth.login', next=request.url))
     
-    trainer = get_trainer_by_id(trainer_id)
+    # 활성화된 트레이너만 조회 (is_hidden = 0)
+    trainer = get_active_trainer_by_id(trainer_id)
     if not trainer:
-        return "트레이너를 찾을 수 없습니다.", 404
+        return "해당 트레이너를 찾을 수 없거나 현재 상담 신청을 받지 않고 있습니다.", 404
     
     # 오늘 날짜와 최대 예약 가능 날짜 (30일 후)
     today = datetime.now().strftime('%Y-%m-%d')
     max_date = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
     
+    # 템플릿 파일명을 consultation.html로 변경
     return render_template('consultation.html', 
                          trainer=trainer, 
                          today=today, 
@@ -149,49 +151,109 @@ def my_consultations():
         print(f"내 상담 목록 조회 오류: {e}")
         return "상담 목록을 불러올 수 없습니다.", 500
 
-@consultation_bp.route('/cancel-consultation/<int:consultation_id>', methods=['POST'])
-def cancel_consultation(consultation_id):
-    """상담 신청 취소"""
-    if 'user_id' not in session:
-        return jsonify({
-            'success': False,
-            'message': '로그인이 필요합니다.'
-        }), 401
+@consultation_bp.route('/admin/consultations')
+def admin_consultations():
+    """관리자 전용 - 상담 예약 목록 보기"""
+    # 관리자 권한 확인
+    if 'user_id' not in session or not session.get('is_admin'):
+        return redirect(url_for('auth.login'))
     
     try:
         from db.db import get_db
         
+        print("🔍 관리자 페이지 접속 시도...")
+        
         with get_db() as conn:
             with conn.cursor() as cursor:
-                # 본인의 상담 신청인지 확인
+                print("✅ DB 연결 성공")
+                
+                # 단계별 디버깅
+                print("📊 통계 정보 조회 중...")
+                
+                # 1. 기본 통계
+                cursor.execute("SELECT COUNT(*) as total FROM reservations")
+                total_count = cursor.fetchone()['total']
+                print(f"   전체 예약: {total_count}건")
+                
+                cursor.execute("SELECT COUNT(*) as active FROM trainers WHERE is_hidden = 0")
+                active_trainers = cursor.fetchone()['active']
+                print(f"   활성 트레이너: {active_trainers}명")
+                
+                # 2. 오늘/이번달 통계 (안전한 방식으로)
+                cursor.execute("SELECT COUNT(*) as today FROM reservations WHERE reservation_date = CURDATE()")
+                today_count = cursor.fetchone()['today']
+                print(f"   오늘 예약: {today_count}건")
+                
                 cursor.execute("""
-                    SELECT * FROM reservations 
-                    WHERE reservation_id = %s AND user_id = %s AND status != 2
-                """, (consultation_id, session['user_id']))
+                    SELECT COUNT(*) as month 
+                    FROM reservations 
+                    WHERE reservation_date >= DATE_FORMAT(NOW(), '%Y-%m-01')
+                """)
+                month_count = cursor.fetchone()['month']
+                print(f"   이번달 예약: {month_count}건")
                 
-                consultation = cursor.fetchone()
-                if not consultation:
-                    return jsonify({
-                        'success': False,
-                        'message': '상담 신청을 찾을 수 없습니다.'
-                    }), 404
+                # 3. 트레이너 목록
+                print("🏋️‍♂️ 트레이너 목록 조회 중...")
+                cursor.execute("SELECT trainer_id, tname FROM trainers WHERE is_hidden = 0")
+                trainers = cursor.fetchall()
+                print(f"   조회된 트레이너: {len(trainers)}명")
                 
-                # 상담 신청 취소 (status = 2)
+                # 4. 예약 목록 조회 (단순화)
+                print("📅 예약 목록 조회 중...")
                 cursor.execute("""
-                    UPDATE reservations 
-                    SET status = 2 
-                    WHERE reservation_id = %s
-                """, (consultation_id,))
-                conn.commit()
+                    SELECT 
+                        r.reservation_id,
+                        r.user_id,
+                        r.trainer_id,
+                        r.reservation_date,
+                        r.reservation_time,
+                        r.num_people,
+                        r.status,
+                        r.created_at,
+                        t.tname,
+                        t.image_url,
+                        u.uname,
+                        u.phone
+                    FROM reservations r
+                    JOIN trainers t ON r.trainer_id = t.trainer_id
+                    JOIN users u ON r.user_id = u.user_id
+                    ORDER BY r.created_at DESC
+                """)
+                reservations = cursor.fetchall()
+                print(f"   조회된 예약: {len(reservations)}건")
                 
-                return jsonify({
-                    'success': True,
-                    'message': '상담 신청이 취소되었습니다.'
-                })
+                # 시간 포맷 변환 (timedelta → 문자열)
+                for reservation in reservations:
+                    if isinstance(reservation['reservation_time'], type(reservation['reservation_time'])):
+                        # timedelta를 HH:MM 형식으로 변환
+                        total_seconds = int(reservation['reservation_time'].total_seconds())
+                        hours = total_seconds // 3600
+                        minutes = (total_seconds % 3600) // 60
+                        reservation['reservation_time_str'] = f"{hours:02d}:{minutes:02d}"
+                    else:
+                        reservation['reservation_time_str'] = str(reservation['reservation_time'])
                 
+                # 각 예약 정보 출력 (디버깅용)
+                for i, res in enumerate(reservations[:3]):  # 처음 3개만
+                    print(f"   예약 {i+1}: #{res['reservation_id']} - {res['tname']} - {res['uname']} - {res.get('reservation_time_str', 'N/A')}")
+        
+        print("🎉 모든 데이터 조회 완료, 템플릿 렌더링 중...")
+        
+        return render_template('admin_consultations.html',
+                             reservations=reservations,
+                             total_count=total_count,
+                             today_count=today_count,
+                             month_count=month_count,
+                             active_trainers=active_trainers,
+                             trainers=trainers)
+        
     except Exception as e:
-        print(f"상담 신청 취소 오류: {e}")
-        return jsonify({
-            'success': False,
-            'message': '상담 신청 취소 중 오류가 발생했습니다.'
-        }), 500
+        print(f"❌ 상세 오류 정보:")
+        print(f"   오류 메시지: {e}")
+        print(f"   오류 타입: {type(e)}")
+        
+        # 스택 트레이스 출력
+        import traceback
+        traceback.print_exc()
+        
+        return f"예약 목록을 불러올 수 없습니다.<br>오류: {e}", 500

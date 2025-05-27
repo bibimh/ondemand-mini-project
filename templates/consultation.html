@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>상담 신청 - Fit Pick</title>
     <style>
+        /* Noto Sans KR 폰트 적용 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap');
+        
         * {
             margin: 0;
             padding: 0;
@@ -12,8 +15,8 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #E1D8D2 0%, #CFC6C4 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -25,9 +28,10 @@
             background: white;
             padding: 40px;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 40px rgba(207, 198, 196, 0.3);
             max-width: 600px;
             width: 100%;
+            border: 1px solid #E0D9D5;
         }
 
         .header {
@@ -36,22 +40,50 @@
         }
 
         .header h1 {
-            color: #333;
+            color: #CFC6C4;
             font-size: 2em;
             margin-bottom: 10px;
+            font-weight: 700;
         }
 
         .trainer-info {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #E0D9D5 0%, #DACFCB 100%);
             padding: 20px;
             border-radius: 10px;
             margin-bottom: 30px;
-            text-align: center;
+            border: 1px solid #DAD2CF;
         }
 
-        .trainer-info h2 {
-            color: #667eea;
-            margin-bottom: 10px;
+        .trainer-profile {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .trainer-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #D4CDC9;
+            box-shadow: 0 4px 12px rgba(207, 198, 196, 0.3);
+        }
+
+        .trainer-details {
+            flex: 1;
+        }
+
+        .trainer-details h2 {
+            color: #CFC6C4;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 1.4em;
+        }
+
+        .trainer-details p {
+            color: #D4CDC9;
+            font-weight: 400;
+            font-size: 1em;
         }
 
         .form-group {
@@ -61,32 +93,33 @@
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            font-weight: 600;
-            color: #333;
+            font-weight: 500;
+            color: #CFC6C4;
         }
 
         .form-group input, 
         .form-group select {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e9ecef;
+            border: 2px solid #E0D9D5;
             border-radius: 8px;
             font-size: 16px;
+            font-family: 'Noto Sans KR', sans-serif;
             transition: border-color 0.3s;
         }
 
         .form-group input:focus, 
         .form-group select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #D4CDC9;
         }
 
         .calendar-container {
             margin-top: 10px;
             padding: 20px;
-            border: 2px solid #e9ecef;
+            border: 2px solid #E0D9D5;
             border-radius: 10px;
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #E1D8D2 0%, #E0D9D5 100%);
         }
 
         .time-slots {
@@ -98,33 +131,34 @@
 
         .time-slot {
             padding: 12px;
-            border: 2px solid #e9ecef;
+            border: 2px solid #E0D9D5;
             border-radius: 8px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
             background: white;
             font-weight: 500;
+            font-family: 'Noto Sans KR', sans-serif;
         }
 
         .time-slot:hover:not(.disabled) {
-            border-color: #667eea;
-            background: #f8f9ff;
+            border-color: #D4CDC9;
+            background: linear-gradient(135deg, #E1D8D2 0%, #E0D9D5 100%);
             transform: translateY(-2px);
         }
 
         .time-slot.selected {
-            background: #667eea;
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
             color: white;
-            border-color: #667eea;
+            border-color: #CFC6C4;
             transform: translateY(-2px);
         }
 
         .time-slot.disabled {
-            background: #f8f9fa;
-            color: #6c757d;
+            background: #E0D9D5;
+            color: #CFC6C4;
             cursor: not-allowed;
-            border-color: #dee2e6;
+            border-color: #DACFCB;
         }
 
         .people-selector {
@@ -136,44 +170,48 @@
         .people-option {
             flex: 1;
             padding: 12px;
-            border: 2px solid #e9ecef;
+            border: 2px solid #E0D9D5;
             border-radius: 8px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
             background: white;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 400;
         }
 
         .people-option:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
+            border-color: #D4CDC9;
+            background: linear-gradient(135deg, #E1D8D2 0%, #E0D9D5 100%);
         }
 
         .people-option.selected {
-            background: #667eea;
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
             color: white;
-            border-color: #667eea;
+            border-color: #CFC6C4;
         }
 
         .submit-btn {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
             color: white;
             border: none;
             border-radius: 10px;
             font-size: 18px;
             font-weight: 600;
+            font-family: 'Noto Sans KR', sans-serif;
             cursor: pointer;
             transition: transform 0.3s;
         }
 
         .submit-btn:hover:not(:disabled) {
             transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(207, 198, 196, 0.4);
         }
 
         .submit-btn:disabled {
-            background: #6c757d;
+            background: #E0D9D5;
             cursor: not-allowed;
             transform: none;
         }
@@ -182,15 +220,18 @@
             display: inline-block;
             margin-bottom: 20px;
             padding: 10px 20px;
-            background: #6c757d;
-            color: white;
+            background: linear-gradient(135deg, #DACFCB 0%, #DAD2CF 100%);
+            color: #CFC6C4;
             text-decoration: none;
             border-radius: 6px;
-            transition: background 0.3s;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s;
         }
 
         .back-btn:hover {
-            background: #5a6268;
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
+            color: white;
         }
 
         .modal {
@@ -201,7 +242,7 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(207, 198, 196, 0.8);
         }
 
         .modal-content {
@@ -212,50 +253,59 @@
             width: 90%;
             max-width: 400px;
             text-align: center;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 20px 40px rgba(207, 198, 196, 0.3);
+            border: 1px solid #E0D9D5;
         }
 
         .modal-content h3 {
             margin-bottom: 20px;
-            color: #667eea;
+            color: #CFC6C4;
             font-size: 1.5em;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 600;
         }
 
         .modal-btn {
             padding: 12px 24px;
-            background: #667eea;
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             margin: 5px;
             font-size: 16px;
-            transition: background 0.3s;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s;
         }
 
         .modal-btn:hover {
-            background: #5a6fd8;
+            background: linear-gradient(135deg, #CFC6C4 0%, #D4CDC9 100%);
+            transform: translateY(-1px);
         }
 
         .modal-btn.cancel {
-            background: #6c757d;
+            background: linear-gradient(135deg, #E0D9D5 0%, #DACFCB 100%);
+            color: #CFC6C4;
         }
 
         .modal-btn.cancel:hover {
-            background: #5a6268;
+            background: linear-gradient(135deg, #DACFCB 0%, #DAD2CF 100%);
         }
 
         .selection-summary {
-            background: #e3f2fd;
+            background: linear-gradient(135deg, #E1D8D2 0%, #E0D9D5 100%);
             padding: 15px;
             border-radius: 8px;
             margin: 20px 0;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #D4CDC9;
         }
 
         .selection-summary h4 {
-            color: #667eea;
+            color: #CFC6C4;
             margin-bottom: 10px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 600;
         }
 
         #successModal .modal-content {
@@ -271,19 +321,21 @@
             font-size: 16px;
             line-height: 1.6;
             margin-bottom: 30px;
-            color: #555;
+            color: #CFC6C4;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 400;
         }
 
         #successModal .modal-btn {
             padding: 15px 30px;
             font-size: 16px;
             font-weight: 600;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
         }
 
         #successModal .modal-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(207, 198, 196, 0.4);
         }
 
         @media (max-width: 768px) {
@@ -312,8 +364,15 @@
         </div>
 
         <div class="trainer-info">
-            <h2>{{ trainer.tname }} 트레이너</h2>
-            <p>{{ trainer.specialty if trainer.specialty else '전문 트레이너' }}</p>
+            <div class="trainer-profile">
+                <img src="{{ trainer.image_url if trainer.image_url else '/static/images/default-trainer.jpg' }}" 
+                     alt="{{ trainer.tname }} 트레이너" 
+                     class="trainer-image">
+                <div class="trainer-details">
+                    <h2>{{ trainer.tname }} 트레이너</h2>
+                    <p>전문 트레이너</p>
+                </div>
+            </div>
         </div>
 
         <form id="consultationForm">

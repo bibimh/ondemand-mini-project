@@ -14,6 +14,3 @@ __pycache__/
 # MacOS, Windows 자동 생성 파일 (선택)
 .DS_Store
 Thumbs.db
-
-# SQLite 데이터베이스 파일 (로컬 데이터)
-*.db

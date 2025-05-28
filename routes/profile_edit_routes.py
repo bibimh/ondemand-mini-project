@@ -102,7 +102,7 @@ def edit_profile(trainer_id):
         cursor.execute("SELECT * FROM trainers WHERE trainer_id = %s", (trainer_id,))
         trainer = cursor.fetchone()
 
-        cursor.execute("SELECT name, image_data FROM site_images WHERE name LIKE %s", (f"트레이너{trainer_id}_%",))
+        cursor.execute("SELECT name, image_data FROM site_images WHERE name LIKE %s", (f"trainer{trainer_id}_%",))
         image_rows = cursor.fetchall()
 
     image_sources = [

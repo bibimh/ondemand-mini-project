@@ -2,7 +2,6 @@ from flask import Flask, render_template, request, redirect, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
 from routes.consultation_routes import consultation_bp
-from routes.auth_routes import auth_bp
 
 app = Flask(__name__)
 app.secret_key = 'a9f3b7d2e1c4f6a8'

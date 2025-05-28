@@ -1,18 +1,13 @@
-# app.py
-
-from flask import Flask, render_template, request, redirect, session, jsonify, url_for
+from flask import Flask, render_template, request, redirect, session, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask import send_file
+from profile_routes import profile_bp
+from profile_edit_routes import edit_profile_bp
+import io
 import pymysql
-from routes.consultation_routes import consultation_bp
-from routes.profile_routes import profile_bp
-from routes.profile_edit_routes import edit_profile_bp
 
 app = Flask(__name__)
 app.secret_key = 'a9f3b7d2e1c4f6a8'
-app.register_blueprint(consultation_bp)
-# Blueprint 등록
-app.register_blueprint(profile_bp)
-app.register_blueprint(edit_profile_bp)
 
 # DB 연결
 def get_db():
@@ -24,18 +19,29 @@ def get_db():
         charset='utf8mb4',
         cursorclass=pymysql.cursors.DictCursor
     )
-
-
-
-
+# 연결 확인 코드 
+if __name__ == "__main__":
+    try:
+        conn = get_db()
+        print("DB 연결 성공")
+    except Exception as e:
+        print(f"DB 연결 실패: {e}")
+    finally:
+        if conn:
+            conn.close()
+            print("DB 연결 종료")
+            conn = None
 # 로그인 페이지
 @app.route('/')
 def home():
     return render_template('login.html')
 
-# 로그인 처리 (AJAX 응답)
-@app.route('/login', methods=['POST'])
+# 로그인 페이지 (GET), 로그인 처리 (POST)
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'GET':
+        return render_template('login.html')
+
     login_id = request.form['login_id']
     password = request.form['password']
 
@@ -55,12 +61,15 @@ def login():
         session['user_id'] = user['user_id']
         session['uname'] = user['uname']
         session['is_admin'] = user['is_admin']
-        redirect_url = '/admin' if user['is_admin'] else '/match'
+        redirect_url = '/admin' if user['is_admin'] else '/info'
         return jsonify({'success': True, 'redirect': redirect_url})
 
-# 회원가입 처리 (AJAX 응답)
-@app.route('/signup', methods=['POST'])
+# 회원가입 페이지 (GET), 회원가입 처리 (POST)
+@app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    if request.method == 'GET':
+        return render_template('signup.html')
+
     login_id = request.form['login_id']
     password = request.form['password']
     confirm = request.form['confirm_password']
@@ -109,6 +118,7 @@ def signup():
 
     return jsonify({'success': True, 'message': '회원가입이 완료되었습니다. 로그인해주세요.'})
 
+
 # 관리자 메인
 @app.route('/admin')
 def admin_page():
@@ -127,7 +137,7 @@ def main_page():
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect('/')
+    return redirect('/info')
 
 # 트레이너 매칭
 @app.route('/match', methods=['GET', 'POST'])
@@ -174,6 +184,28 @@ def trainer_profile(trainer_id):
         cursor.execute("SELECT * FROM trainers WHERE trainer_id = %s", (trainer_id,))
         trainer = cursor.fetchone()
     return render_template('trainer_profile.html', trainer=trainer)
+
+# Fitpick 헬스장 정보 페이지
+@app.route('/info')
+def info_page():
+    return render_template('info.html', user_id=session.get('user_id'))
+
+# Fitpick 헬스장 이미지 업로드
+@app.route('/image/<int:image_id>')
+def get_image(image_id):
+    conn = get_db()
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT image_data FROM site_images WHERE image_id = %s", (image_id,))
+        row = cursor.fetchone()
+        if row and row['image_data']:
+            return send_file(
+                io.BytesIO(row['image_data']),
+                mimetype='image/jpeg'
+            )
+    return 'Image Not Found', 404
+
+app.register_blueprint(profile_bp)
+app.register_blueprint(edit_profile_bp)
 
 if __name__ == '__main__':
     app.run(debug=True)

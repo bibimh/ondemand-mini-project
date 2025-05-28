@@ -1,0 +1,21 @@
+<!-- edit_profile.html -->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>프로필 수정</title>
+</head>
+<body>
+    <h2>{{ trainer.tname }} 트레이너 프로필 수정</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <label>소개글:</label><br>
+        <textarea name="introduce" rows="5" cols="60">{{ trainer.introduce }}</textarea><br><br>
+
+        <label>프로필 이미지 추가:</label><br>
+        <input type="file" name="images" multiple accept="image/*"><br><br>
+
+        <button type="submit">수정 완료</button>
+    </form>
+</body>
+</html>

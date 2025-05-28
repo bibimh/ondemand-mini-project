@@ -35,7 +35,9 @@
 
                 {% if is_admin %}
                     <br>
-                    <button class="edit-btn">프로필 수정하기</button>
+                    <a href="{{ url_for('edit_profile.edit_profile', trainer_id=trainer_id) }}">
+                        <button class="edit-btn">프로필 수정하기</button>
+                    </a>                    
                     <br><br>
                 {% endif %}
             </div>

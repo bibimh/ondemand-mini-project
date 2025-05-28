@@ -1,31 +1,103 @@
-.box1 img:hover {
-    content: url('/static/images/trainer1_hover.jpg');
+/* 컨테이너 */
+.container {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 1220px;
+    height: 821px;
+    background-color: #fff;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    padding: 30px;
 }
-.box2 img:hover {
-    content: url('/static/images/trainer2_hover.jpg');
+
+/* 왼쪽 그룹 전체를 올리기 위해 래퍼 적용 */
+.left-wrapper {
+    position: relative;
+    top: -150px; /* 로그인 텍스트와 맞춰지도록 위로 이동 */
 }
-.box3 img:hover {
-    content: url('/static/images/trainer3_hover.jpg');
+
+/* 왼쪽 박스 */
+.left-box {
+    width: 400px;
+    height: 600px;
+    position: relative;
 }
-.box4 img:hover {
-    content: url('/static/images/trainer4_hover.jpg');
+
+.image-link img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
-.box5 img:hover {
-    content: url('/static/images/trainer5_hover.jpg');
+
+/* 텍스트들을 이미지 아래에 배치 */
+.main-title {
+    position: absolute;
+    top: 620px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 480px;
+    font-size: 55px;
+    font-weight: 600;
+    color: #000;
+    line-height: 55px;
+    text-align: center;
+    word-break: keep-all;
+    white-space: normal;
 }
-.box6 img:hover {
-    content: url('/static/images/trainer6_hover.jpg');
+
+.fitpick {
+    position: absolute;
+    top: 725px;
+    left: calc(50% + 50px);
+    transform: translateX(-50%);
+    font-size: 45px;
+    font-weight: 600;
+    color: #000;
+    text-align: center;
 }
-.box7 img:hover {
-    content: url('/static/images/trainer7_hover.jpg');
+
+.arrow {
+    position: absolute;
+    top: 730px;
+    left: calc(50% + 125px);
+    width: 76px;
+    height: 50px;
+    object-fit: contain;
 }
-.box8 img:hover {
-    content: url('/static/images/trainer8_hover.jpg');
+
+/* 오른쪽 박스 */
+.right-box {
+    display: grid;
+    grid-template-columns: repeat(3, 180px);
+    grid-template-rows: repeat(3, 240px);
+    gap: 20px 30px;
 }
-.box9 img:hover {
-    content: url('/static/images/trainer9_hover.jpg');
+
+.right-box img {
+    width: 180px;
+    height: 240px;
+    object-fit: cover;
+    transition: 0.3s;
 }
-.box10 img:hover {
-    content: url('/static/images/trainer10_hover.jpg');
+
+a {
+    text-decoration: none;
+    color: black;
 }
-/* ... 나머지도 동일하게 */
+
+header {
+    position: absolute !important;
+    top: 15px !important;
+    right: 30px !important;
+    display: flex !important;
+    gap: 20px !important;
+    z-index: 10 !important;
+}
+
+header a {
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    color: black !important;
+    text-decoration: none !important;
+}

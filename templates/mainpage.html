@@ -3,39 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <title>Fit Pick 메인페이지</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='basic.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/background.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/basic.css') }}">
 </head>
 <body>
-    <header>
-        <nav>
-            <a href="/center" target="_blank">센터 바로가기</a>
+    <div class="container">
+        <!-- header -->
+        <header>
             <a href="/login" target="_blank">로그인</a>
-        </nav>
-    </header>
+            <a href="/center" target="_blank">센터 바로가기</a>
+        </header>
 
-    <main>
-        <!-- 왼쪽 큰 박스(트레이너1) -->
-        <a href="/tpage1" target="_blank">
-            <div class="box box1">
-                <img src="/static/images/trainer1.jpg" alt="트레이너1">
+        <!-- 왼쪽 그룹 박스 -->
+        <div class="left-wrapper">
+            <div class="left-box">
+                <a href="/tpage1" target="_blank" class="image-link">
+                    <img src="{{ url_for('static', filename='images/trainer1.jpg') }}" alt="트레이너1">
+                </a>
+                <a href="/fitpick" target="_blank" class="main-title">나를 위한 선택,<br>트레이너 매칭하기</a>
+                <a href="/fitpick" target="_blank" class="fitpick">FitPick</a>
+                <img src="{{ url_for('static', filename='images/arrow.png') }}" alt="화살표" class="arrow">
             </div>
-        </a>
-        <!-- 오른쪽 작은 박스들(트레이너2-10) -->
-        <a href="/tpage2" target="_blank"><div class="box box2"><img src="/static/images/trainer2.jpg" alt="트레이너2"></div></a>
-        <a href="/tpage3" target="_blank"><div class="box box3"><img src="/static/images/trainer3.jpg" alt="트레이너3"></div></a>
-        <a href="/tpage4" target="_blank"><div class="box box4"><img src="/static/images/trainer4.jpg" alt="트레이너4"></div></a>
-        <a href="/tpage5" target="_blank"><div class="box box5"><img src="/static/images/trainer5.jpg" alt="트레이너5"></div></a>
-        <a href="/tpage6" target="_blank"><div class="box box6"><img src="/static/images/trainer6.jpg" alt="트레이너6"></div></a>
-        <a href="/tpage7" target="_blank"><div class="box box7"><img src="/static/images/trainer7.jpg" alt="트레이너7"></div></a>
-        <a href="/tpage8" target="_blank"><div class="box box8"><img src="/static/images/trainer8.jpg" alt="트레이너8"></div></a>
-        <a href="/tpage9" target="_blank"><div class="box box9"><img src="/static/images/trainer9.jpg" alt="트레이너9"></div></a>
-        <a href="/tpage10" target="_blank"><div class="box box10"><img src="/static/images/trainer10.jpg" alt="트레이너10"></div></a>
-        <!-- 나머지 박스들도 추가 -->
-    </main>
+        </div>
 
-    <a href="/fitpick">
-        <h1 class="main-title">나를 위한 선택, 트레이너 매칭하기</h1>
-    </a>
-    <a href="/fitpick" class="fit-pick">Fit Pick ↖</a>
+        <!-- 오른쪽 박스 -->
+        <div class="right-box">
+            {% for i in range(2,11) %}
+            <a href="/tpage{{ i }}" target="_blank">
+                <img src="{{ url_for('static', filename='images/trainer' ~ i ~ '.jpg') }}" alt="트레이너{{ i }}">
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+    // hover 기능: 왼쪽 큰 이미지
+    document.addEventListener('DOMContentLoaded', function() {
+        const img = document.querySelector('.image-link img');
+        if (img) {
+            const originalSrc = img.src;
+            const hoverSrc = originalSrc.replace('.jpg', '_hover.jpg');
+            img.addEventListener('mouseenter', () => img.src = hoverSrc);
+            img.addEventListener('mouseleave', () => img.src = originalSrc);
+        }
+    });
+    </script>
 </body>
 </html>

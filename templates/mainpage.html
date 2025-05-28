@@ -37,8 +37,8 @@
     </div>
 
     <script>
-    // hover 기능: 왼쪽 큰 이미지
     document.addEventListener('DOMContentLoaded', function() {
+        // 왼쪽 큰 이미지 hover
         const img = document.querySelector('.image-link img');
         if (img) {
             const originalSrc = img.src;
@@ -46,7 +46,23 @@
             img.addEventListener('mouseenter', () => img.src = hoverSrc);
             img.addEventListener('mouseleave', () => img.src = originalSrc);
         }
+
+        // 오른쪽 9개 trainer 이미지 hover
+        document.querySelectorAll('.right-box img').forEach(function(trainerImg) {
+            const src = trainerImg.src;
+            if (src.includes('.jpg') && !src.includes('_hover')) {
+                const hoverSrc = src.replace('.jpg', '_hover.jpg');
+                trainerImg.addEventListener('mouseenter', function() {
+                    trainerImg.src = hoverSrc;
+                });
+                trainerImg.addEventListener('mouseleave', function() {
+                    trainerImg.src = src;
+                });
+            }
+        });
     });
     </script>
+
+
 </body>
 </html>

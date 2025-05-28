@@ -11,11 +11,17 @@
     padding: 30px;
 }
 
-/* 왼쪽 그룹 전체를 올리기 위해 래퍼 적용 */
 .left-wrapper {
     position: relative;
-    top: -150px; /* 로그인 텍스트와 맞춰지도록 위로 이동 */
+    margin-top: -170px;
+    margin-left: 80px;  /* ← 원하는 만큼 조정 (예시) */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
 }
+
+
 
 /* 왼쪽 박스 */
 .left-box {
@@ -29,6 +35,8 @@
     height: 100%;
     object-fit: cover;
 }
+
+
 
 /* 텍스트들을 이미지 아래에 배치 */
 .main-title {

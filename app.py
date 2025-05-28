@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, jsonify
+from flask import Flask, render_template, request, redirect, session, jsonify, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
 from routes.consultation_routes import consultation_bp
@@ -10,9 +10,9 @@ app.register_blueprint(consultation_bp)
 # DB 연결
 def get_db():
     return pymysql.connect(
-        host='localhost',
-        user='root',
-        password='1234',
+        host='192.168.40.14',
+        user='fitpickuser',
+        password='fitpick1234',
         db='fitpick',
         charset='utf8mb4',
         cursorclass=pymysql.cursors.DictCursor

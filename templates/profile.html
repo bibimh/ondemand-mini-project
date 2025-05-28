@@ -176,7 +176,12 @@
                         y: {
                             beginAtZero: true,
                             max: 100,
-                            ticks: { stepSize: 20 }
+                            ticks: {
+                                stepSize: 20,
+                                callback: function(value) {
+                                    return value + '%';  // ✅ y축에 % 표시
+                                }
+                            }
                         }
                     }
                 }

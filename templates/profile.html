@@ -14,9 +14,11 @@
         <div class="trainer-section">
             <div class="trainer-left">
                 <div class="image-carousel">
-                    {% for src in image_sources %}
-                        <img class="carousel-img {% if not loop.first %}hidden{% endif %}" src="{{ src }}">
-                    {% endfor %}
+                    <div class="carousel-track">
+                        {% for src in image_sources %}
+                            <img class="carousel-img" src="{{ src }}">
+                        {% endfor %}
+                    </div>
                     {% if image_sources|length > 1 %}
                         <button class="carousel-btn left" onclick="prevImage()">&#10094;</button>
                         <button class="carousel-btn right" onclick="nextImage()">&#10095;</button>
@@ -60,24 +62,50 @@
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
             let current = 0;
+            const track = document.querySelector('.carousel-track');
             const images = document.querySelectorAll('.carousel-img');
+            const total = images.length;
 
-            function showImage(index) {
-                images.forEach((img, i) => {
-                img.classList.toggle('hidden', i !== index);
+            const btnLeft = document.querySelector('.carousel-btn.left');
+            const btnRight = document.querySelector('.carousel-btn.right');
+
+            function updateSlide() {
+                const container = document.querySelector('.image-carousel');
+                const track = document.querySelector('.carousel-track');
+                const images = document.querySelectorAll('.carousel-img');
+                const containerWidth = container.offsetWidth;
+
+                track.style.width = `${containerWidth * total}px`;
+                track.style.transform = `translateX(-${current * containerWidth}px)`;
+
+                images.forEach(img => {
+                    img.style.width = `${containerWidth}px`;  // 이미지 크기 통일
+                    img.style.flex = '0 0 auto';              // 축소 방지
                 });
+
+                if (btnLeft) btnLeft.disabled = current === 0;
+                if (btnRight) btnRight.disabled = current === total - 1;
             }
 
             function prevImage() {
-                current = (current - 1 + images.length) % images.length;
-                showImage(current);
+                if (current > 0) {
+                    current--;
+                    updateSlide();
+                }
             }
 
             function nextImage() {
-                current = (current + 1) % images.length;
-                showImage(current);
+                if (current < total - 1) {
+                    current++;
+                    updateSlide();
+                }
             }
+
+            window.addEventListener('load', updateSlide);
+            window.addEventListener('resize', updateSlide);
         </script>
+
+
         <script>
             const genderData = JSON.parse('{{ gender_data | tojson | safe }}');
             const ageData = JSON.parse('{{ age_data | tojson | safe }}');

@@ -81,12 +81,12 @@ def edit_profile(trainer_id):
 
             # 새 이미지 추가
             new_files = request.files.getlist('new_images')
-            cursor.execute("SELECT COUNT(*) as count FROM site_images WHERE name LIKE %s", (f"%트레이너{trainer_id}_%",))
+            cursor.execute("SELECT COUNT(*) as count FROM site_images WHERE name LIKE %s", (f"%trainer{trainer_id}_%",))
             existing_count = cursor.fetchone()['count']
 
             for i, file in enumerate(new_files):
                 if file and file.filename:
-                    name = f"트레이너{trainer_id}_{existing_count + i + 1}"
+                    name = f"trainer{trainer_id}_{existing_count + i + 1}"
                     data = file.read()
                     cursor.execute("""
                         INSERT INTO site_images (name, image_data, description)

@@ -22,9 +22,6 @@ def insert_image(file_path, name, description):
     conn.close()
 
 # 이미지 등록
-insert_image('static/images/background.jpg', '배경', '배경 이미지')
-insert_image('static/images/trainer3_1.jpg', '트레이너3-1', '프로필 이미지')
-insert_image('static/images/trainer3_2.jpg', '트레이너3-2', '프로필 이미지')
-insert_image('static/images/trainer4_1.jpg', '트레이너4-1', '프로필 이미지')
-insert_image('static/images/trainer5_1.jpg', '트레이너5-1', '프로필 이미지')
-insert_image('static/images/trainer6_1.jpg', '트레이너6-1', '프로필 이미지')
+# insert_image('static/images/trainer3_1.jpg', 'trainer3_1', '오이영1')
+
+

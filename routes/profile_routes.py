@@ -24,7 +24,7 @@ def profile(trainer_id):
             SELECT image_data FROM site_images
             WHERE name LIKE %s
             ORDER BY uploaded_at ASC
-        """, (f"%트레이너{trainer_id}%",))
+        """, (f"trainer{trainer_id}%",))
         image_rows = cursor.fetchall()
 
     image_sources = [
@@ -111,7 +111,7 @@ def profile(trainer_id):
             if age < 10:
                 continue
             elif age >= 50:
-                age_counter['50대 이상'] += 1
+                age_counter['50대+'] += 1
             else:
                 decade = (age // 10) * 10
                 label = f"{decade}대"

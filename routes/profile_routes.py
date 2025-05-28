@@ -60,35 +60,72 @@ def profile(trainer_id):
     review_count = len(reviews)
     avg_rating = round(sum(r["rating"] for r in reviews) / review_count, 1) if review_count > 0 else 0.0
 
-    # === 지난달 통계 계산 (gender만 출력, 연령대는 임시 미사용) ===
+    # === 지난달 통계 계산 ===
     today = datetime.today()
     first_day_this_month = today.replace(day=1)
     last_month_end = first_day_this_month - timedelta(days=1)
     last_month_start = last_month_end.replace(day=1)
+    this_year = today.year
+
+    gender_counter = defaultdict(int)
+    age_counter = defaultdict(int)
+    total_count = 0
 
     with conn.cursor() as cursor:
+        # 1. 성별 통계
         cursor.execute("""
             SELECT u.gender, COUNT(*) as count
             FROM member_regist m
             JOIN users u ON m.user_id = u.user_id
             WHERE m.trainer_id = %s
-              AND m.regist_date BETWEEN %s AND %s
+            AND m.regist_date BETWEEN %s AND %s
             GROUP BY u.gender
         """, (trainer_id, last_month_start.date(), last_month_end.date()))
-        rows = cursor.fetchall()
+        gender_rows = cursor.fetchall()
 
-    gender_counter = defaultdict(int)
-    age_counter = defaultdict(int)  # 빈 dict 유지
-    total_count = 0
+        for row in gender_rows:
+            gender = row['gender']
+            count = row['count']
+            gender_counter[gender] += count
+            total_count += count  # 총합은 gender + age 기준 공통으로 사용
 
-    for row in rows:
-        gender = row['gender']
-        count = row['count']
-        gender_counter[gender] += count
-        total_count += count
+        # 2. 생년 기반 연령대 통계
+        cursor.execute("""
+            SELECT u.birthday
+            FROM member_regist m
+            JOIN users u ON m.user_id = u.user_id
+            WHERE m.trainer_id = %s
+            AND m.regist_date BETWEEN %s AND %s
+            AND u.birthday IS NOT NULL
+        """, (trainer_id, last_month_start.date(), last_month_end.date()))
+        birth_rows = cursor.fetchall()
 
-    gender_data = {k: round(v / total_count * 100, 1) for k, v in gender_counter.items()} if total_count else {}
-    age_data = {k: round(v / total_count * 100, 1) for k, v in age_counter.items()} if total_count else {}
+        # 고정 연령대 그룹
+        age_groups = ['10대', '20대', '30대', '40대', '50대+']
+        age_counter = {group: 0 for group in age_groups}
+
+        for row in birth_rows:
+            birth_year = row['birthday'].year
+            age = this_year - birth_year + 1  # 한국식 나이
+
+            if age < 10:
+                continue
+            elif age >= 50:
+                age_counter['50대 이상'] += 1
+            else:
+                decade = (age // 10) * 10
+                label = f"{decade}대"
+                if label in age_counter:
+                    age_counter[label] += 1
+
+    # 비율 계산
+    gender_data = {
+        k: round(v / total_count * 100, 1) for k, v in gender_counter.items()
+    } if total_count else {}
+
+    age_data = {
+        k: round(v / total_count * 100, 1) for k, v in age_counter.items()
+    } if total_count else {k: 0.0 for k in age_groups}
 
     return render_template(
         'profile.html', 

@@ -5,6 +5,12 @@
 <head>
     <meta charset="UTF-8">
     <title>프로필 수정</title>
+    {% if error_message %}
+    <script>
+        alert("{{ error_message }}");
+    </script>
+    {% endif %}
+
 </head>
 <body>
     <h2>{{ trainer.tname }} 트레이너 프로필 수정</h2>
@@ -17,9 +23,10 @@
 
         <label>성별:</label><br>
         <select name="trait_5">
-            <option value="남성" {% if trainer.trait_5 == '남성' %}selected{% endif %}>남성</option>
-            <option value="여성" {% if trainer.trait_5 == '여성' %}selected{% endif %}>여성</option>
-        </select><br><br>
+            <option value="남성" {% if trainer.gender == 'M' %}selected{% endif %}>남성</option>
+            <option value="여성" {% if trainer.gender == 'F' %}selected{% endif %}>여성</option>
+        </select>
+        <br><br>
 
         <label>MBTI:</label><br>
         <input type="text" name="mbti" maxlength="4" value="{{ trainer.trait_1 ~ trainer.trait_2 ~ trainer.trait_3 ~ trainer.trait_4 }}"><br><br>
@@ -37,9 +44,6 @@
         <br>
         <label>새 이미지 추가:</label><br>
         <input type="file" name="new_images" multiple accept="image/*"><br><br>
-        <button type="submit">수정 완료</button>
-    </form>
-
         <button type="submit">수정 완료</button>
     </form>
 </body>

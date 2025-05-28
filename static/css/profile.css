@@ -1,0 +1,169 @@
+/* profile.css */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap');
+
+.trainer-section {
+    display: flex;
+    gap: 40px;
+    margin-top: 40px;
+    align-items: flex-start;
+}
+
+.trainer-left {
+    flex: 0 0 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.trainer-right {
+    flex: 1;
+}
+
+.trainer-intro {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    margin-top: 10px;
+}
+
+.profile-img {
+    width: 100%;
+    max-width: 500px;
+    border-radius: 0px;
+}
+
+.trainer-bio {
+    flex: 1;
+}
+
+.trainer-details {
+    white-space: pre-wrap;
+    line-height: 1.6;
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+
+.consult-btn,
+.edit-btn,
+.submit-btn {
+    padding: 10px 20px;
+    background-color: #DACFCB;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    text-align: center;
+}
+
+.consult-btn:hover,
+.edit-btn:hover,
+.submit-btn:hover {
+    background-color: #CFC6C4;
+}
+
+/* 후기 제목에 나오는 별만 노란색 */
+.summary-star {
+    color: #ff9800;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+/* 평균 평점 숫자는 검정색 */
+.summary-score {
+    color: black;
+    font-weight: bold;
+}
+
+.review-summary {
+    margin: 40px 0 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.review-form {
+    margin-bottom: 40px;
+}
+
+.review-card {
+    border: 1px solid #ccc;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    background: #fafafa;
+}
+
+.review-meta {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+/* 후기 카드 내 별점도 노란색 */
+.review-stars {
+    color: #ff9800;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+/* 후기 리스트: 숫자는 검정색 */
+.review-score {
+    color: black;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.chart-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 30px;
+}
+
+.chart-container canvas {
+    max-width: 300px;
+    width: 100%;
+}
+
+.image-carousel {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    height: 500px;
+    overflow: hidden;
+}
+
+.carousel-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transition: opacity 0.5s ease-in-out;
+    border-radius: 0px;
+}
+
+.hidden {
+    display: none;
+}
+
+.carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0,0,0,0.4);
+    color: white;
+    border: none;
+    font-size: 24px;
+    padding: 8px 12px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+.carousel-btn.left {
+    left: 10px;
+}
+.carousel-btn.right {
+    right: 10px;
+}

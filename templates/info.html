@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fitpick 헬스장 소개</title>
+  <link rel="stylesheet" href="/static/css/info.css" />
+</head>
+<body>
+<div class="overlay">
+  <div class="content-wrapper">
+    
+    <!-- 오른쪽 상단 FitPick 로고 -->
+    <h1 class="brand">FitPick!</h1> 
+
+    <!-- 탭버튼 왼쪽 + 로그인 오른쪽 -->
+    <div class="tabs">
+      <div class="tab-buttons">
+        <div class="tab tab-trainer active-tab" onclick="showSection('trainer')">트레이너 소개</div>
+        <div class="tab tab-info" onclick="showSection('info')">헬스장 정보</div>
+      </div>
+      {% if user_id %}
+        <a href="/logout" class="login-link">로그아웃</a>
+      {% else %}
+        <a href="/login" class="login-link">로그인/회원가입</a>
+      {% endif %}
+    </div>
+
+
+<div id="trainer" class="section active">
+  <div class="trainer-gallery">
+    <!-- 왼쪽: 큰 사진 -->
+<a href="/match" class="photo-card" target="_blank">
+  <div class="photo-overlay" style="background-image: url('/image/37');">
+    <div class="photo-text">내 성향에 맞는 트레이너로 선택하자<br>지금 바로 FitPick한테 추천받기</div>
+  </div>
+</a>
+
+  <!-- 오른쪽 3x3 -->
+<div class="right-photo-grid">
+
+  <a href="/profile/1" class="grid-photo-wrapper" target="_blank">
+    <div class="grid-photo" style="background-image: url('/image/31');">
+      <div class="grid-text-overlay">FitPick 클릭!</div>
+    </div>
+  </a>
+
+  <a href="/profile/2" class="grid-photo-wrapper" target="_blank">
+    <div class="grid-photo" style="background-image: url('/image/34');">
+      <div class="grid-text-overlay">FitPick 클릭!</div>
+    </div>
+  </a>
+
+  <a href="/profile/3" class="grid-photo-wrapper" target="_blank">
+    <div class="grid-photo" style="background-image: url('/image/35');">
+      <div class="grid-text-overlay">FitPick 클릭!</div>
+    </div>
+  </a>
+
+  <a href="/profile/4" class="grid-photo-wrapper" target="_blank">
+    <div class="grid-photo" style="background-image: url('/image/7');">
+      <div class="grid-text-overlay">FitPick 클릭!</div>
+    </div>
+  </a>
+
+  <a href="/profile/5" class="grid-photo-wrapper" target="_blank">
+    <div class="grid-photo" style="background-image: url('/image/8');">
+      <div class="grid-text-overlay">FitPick 클릭!</div>
+    </div>
+  </a>
+
+  <a href="/profile/6" class="grid-photo-wrapper" target="_blank">
+    <div class="grid-photo" style="background-image: url('/image/36');">
+      <div class="grid-text-overlay">FitPick 클릭!</div>
+    </div>
+  </a>
+
+  <a href="/profile/7" class="grid-photo-wrapper" target="_blank">
+    <div class="grid-photo" style="background-image: url('/image/10');">
+      <div class="grid-text-overlay">FitPick 클릭!</div>
+    </div>
+  </a>
+
+  <a href="/profile/8" class="grid-photo-wrapper" target="_blank">
+    <div class="grid-photo" style="background-image: url('/image/38');">
+      <div class="grid-text-overlay">FitPick 클릭!</div>
+    </div>
+  </a>
+
+  <a href="/profile/9" class="grid-photo-wrapper" target="_blank">
+    <div class="grid-photo" style="background-image: url('/image/12');">
+      <div class="grid-text-overlay">FitPick 클릭!</div>
+    </div>
+  </a>
+
+</div>
+  </div>
+</div>
+
+      <div id="info" class="section">
+        <p>Fitpick은 당신에게 꼭 맞는 트레이너를 연결해주는 헬스 플랫폼입니다.</p>
+        <p><strong>📍 위치:</strong> 서울시 강남구 역삼동 123-45</p>
+        <p><strong>⏰ 운영시간:</strong> 평일 06:00~23:00 / 주말 08:00~20:00</p>
+        <p><strong>📞 문의전화:</strong> 02-123-4567</p>
+        <p><strong>📧 이메일:</strong> contact@fitpick.kr</p>
+        <div class="social">
+          <a href="https://instagram.com/" target="_blank">Instagram</a>
+          <a href="https://map.naver.com" target="_blank">약도보기</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+
+      const tabTrainer = document.querySelector('.tab-trainer');
+      const tabInfo = document.querySelector('.tab-info');
+
+      tabTrainer.classList.remove('active-tab');
+      tabInfo.classList.remove('active-tab');
+
+      if (id === 'trainer') {
+        tabTrainer.classList.add('active-tab');
+      } else {
+        tabInfo.classList.add('active-tab');
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      showSection('trainer');
+    });
+  </script>
+</body>
+</html>

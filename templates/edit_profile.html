@@ -4,6 +4,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile.css') }}">
     <title>프로필 수정</title>
     {% if error_message %}
     <script>
@@ -31,7 +32,7 @@
         <label>MBTI:</label><br>
         <input type="text" name="mbti" maxlength="4" value="{{ trainer.trait_1 ~ trainer.trait_2 ~ trainer.trait_3 ~ trainer.trait_4 }}"><br><br>
 
-        <label>기존 이미지:</label><br>
+        <label>기존 이미지:</label>
         <div class="image-delete-grid">
             {% for img in image_sources %}
                 <div class="image-box">
@@ -43,6 +44,7 @@
                 </div>
             {% endfor %}
         </div>
+
 
         <br>
         <label>새 이미지 추가:</label><br>

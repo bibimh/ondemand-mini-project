@@ -1,11 +1,18 @@
+# app.py
+
 from flask import Flask, render_template, request, redirect, session, jsonify, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 import pymysql
 from routes.consultation_routes import consultation_bp
+from routes.profile_routes import profile_bp
+from routes.profile_edit_routes import edit_profile_bp
 
 app = Flask(__name__)
 app.secret_key = 'a9f3b7d2e1c4f6a8'
 app.register_blueprint(consultation_bp)
+# Blueprint 등록
+app.register_blueprint(profile_bp)
+app.register_blueprint(edit_profile_bp)
 
 # DB 연결
 def get_db():
@@ -17,6 +24,8 @@ def get_db():
         charset='utf8mb4',
         cursorclass=pymysql.cursors.DictCursor
     )
+
+
 
 
 # 로그인 페이지

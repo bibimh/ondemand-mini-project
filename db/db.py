@@ -135,4 +135,15 @@ def get_trainer_avg_rating(trainer_id):
             return {
                 'avg_rating': round(result['avg_rating'], 1) if result['avg_rating'] else 0,
                 'review_count': result['review_count']
-            }
+            }# db.py
+
+import pymysql
+
+conn = pymysql.connect(
+    host='192.168.40.14',
+    user='fitpickuser',
+    password='fitpick1234',
+    db='fitpick',
+    charset='utf8mb4',
+    cursorclass=pymysql.cursors.DictCursor
+)

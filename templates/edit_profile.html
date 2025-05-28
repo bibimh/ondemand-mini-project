@@ -32,14 +32,17 @@
         <input type="text" name="mbti" maxlength="4" value="{{ trainer.trait_1 ~ trainer.trait_2 ~ trainer.trait_3 ~ trainer.trait_4 }}"><br><br>
 
         <label>기존 이미지:</label><br>
-        {% for idx, img in image_sources %}
-            <div>
-                <img src="{{ img.src }}" style="max-height: 100px;">
-                <label>
-                    <input type="checkbox" name="delete_images" value="{{ img.name }}"> 삭제
-                </label>
-            </div>
-        {% endfor %}
+        <div class="image-delete-grid">
+            {% for img in image_sources %}
+                <div class="image-box">
+                    <img src="{{ img.src }}" alt="기존 이미지" class="preview-img">
+                    <label class="delete-label">
+                        <input type="checkbox" name="delete_images" value="{{ img.name }}">
+                        삭제
+                    </label>
+                </div>
+            {% endfor %}
+        </div>
 
         <br>
         <label>새 이미지 추가:</label><br>

@@ -3,6 +3,7 @@ from db.db import conn
 from collections import defaultdict
 from datetime import datetime, timedelta
 import base64
+from flask import redirect, url_for
 
 profile_bp = Blueprint('profile', __name__)
 
@@ -34,13 +35,17 @@ def profile(trainer_id):
         if request.method == 'POST':
             new_rating = int(request.form['rating'])
             new_text = request.form['review']
-            user_id = 1
+            user_id = 1  # 임시 사용자
+
             cursor.execute("""
                 INSERT INTO reviews (user_id, trainer_id, rating, comment)
                 VALUES (%s, %s, %s, %s)
             """, (user_id, trainer_id, new_rating, new_text))
             conn.commit()
 
+            # 중복 방지를 위해 GET으로 리다이렉트
+            return redirect(url_for('profile.profile', trainer_id=trainer_id))
+        
         cursor.execute("""
             SELECT r.rating, r.comment, r.created_at, u.login_id
             FROM reviews r JOIN users u ON r.user_id = u.user_id

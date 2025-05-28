@@ -230,7 +230,7 @@
                         <span class="star-yellow">{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}</span>
                         <span class="review-score">{{ review.rating }}</span>
                     </p>
-                    <p>{{ review.comment }}</p>
+                    <p>{{ review.comment | replace('\n', '<br>') | safe }}</p>
                 </div>
             {% endfor %}
         </section>

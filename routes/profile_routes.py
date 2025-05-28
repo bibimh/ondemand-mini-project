@@ -53,27 +53,32 @@ def profile(trainer_id):
     review_count = len(reviews)
     avg_rating = round(sum(r["rating"] for r in reviews) / review_count, 1) if review_count > 0 else 0.0
 
-    # === 지난달 통계 계산 ===
+    # === 지난달 통계 계산 (gender만 출력, 연령대는 임시 미사용) ===
     today = datetime.today()
-    last_month = today.replace(day=1) - timedelta(days=1)
+    first_day_this_month = today.replace(day=1)
+    last_month_end = first_day_this_month - timedelta(days=1)
+    last_month_start = last_month_end.replace(day=1)
 
     with conn.cursor() as cursor:
         cursor.execute("""
-            SELECT gender, age_group, SUM(member_count) as count
-            FROM trainer_member_stats
-            WHERE trainer_id = %s AND year = %s AND month = %s
-            GROUP BY gender, age_group
-        """, (trainer_id, last_month.year, last_month.month))
+            SELECT u.gender, COUNT(*) as count
+            FROM member_regist m
+            JOIN users u ON m.user_id = u.user_id
+            WHERE m.trainer_id = %s
+              AND m.regist_date BETWEEN %s AND %s
+            GROUP BY u.gender
+        """, (trainer_id, last_month_start.date(), last_month_end.date()))
         rows = cursor.fetchall()
 
     gender_counter = defaultdict(int)
-    age_counter = defaultdict(int)
+    age_counter = defaultdict(int)  # 빈 dict 유지
     total_count = 0
 
     for row in rows:
-        gender_counter[row['gender']] += row['count']
-        age_counter[row['age_group']] += row['count']
-        total_count += row['count']
+        gender = row['gender']
+        count = row['count']
+        gender_counter[gender] += count
+        total_count += count
 
     gender_data = {k: round(v / total_count * 100, 1) for k, v in gender_counter.items()} if total_count else {}
     age_data = {k: round(v / total_count * 100, 1) for k, v in age_counter.items()} if total_count else {}

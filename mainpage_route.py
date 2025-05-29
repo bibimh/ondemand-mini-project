@@ -5,7 +5,10 @@ mainpage_bp = Blueprint('mainpage', __name__)
 
 @mainpage_bp.route('/')
 def mainpage():
+    # 트레이너 데이터 가져오기 (최대 9개)
     trainers = get_all_trainers()
+    
+    # 트레이너 데이터가 9개 미만인 경우를 대비하여 빈 슬롯 처리는 템플릿에서
     return render_template('mainpage.html', trainers=trainers)
 
 @mainpage_bp.route('/center')

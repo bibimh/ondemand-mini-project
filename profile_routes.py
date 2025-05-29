@@ -5,14 +5,13 @@ from db.db import conn
 from collections import defaultdict
 from datetime import datetime
 import base64
+from flask import jsonify
 
 profile_bp = Blueprint('profile', __name__)
 
 @profile_bp.route('/profile/<int:trainer_id>', methods=['GET', 'POST'])
 def profile(trainer_id):
-    conn.ping(reconnect=True)  # 끊어진 연결 대비
-
-    # 세션 확인
+    conn.ping(reconnect=True)
     user_id = session.get('user_id')
 
     with conn.cursor() as cursor:
@@ -34,14 +33,12 @@ def profile(trainer_id):
         for row in image_rows
     ]
 
-    # === 리뷰 처리 ===
-    with conn.cursor() as cursor:
-        # === 리뷰 작성 (POST 요청 시) ===
-        if request.method == 'POST':
-            if not user_id:
-                return redirect(url_for('login'))
+    # 리뷰 작성 처리
+    if request.method == 'POST':
+        if not user_id:
+            return redirect(url_for('login'))
 
-            # 이 사용자가 이 트레이너에게 등록한 적이 있는지 확인
+        with conn.cursor() as cursor:
             cursor.execute("""
                 SELECT COUNT(*) AS cnt FROM member_regist
                 WHERE user_id = %s AND trainer_id = %s
@@ -51,7 +48,6 @@ def profile(trainer_id):
             if not is_registered:
                 return "<h3>해당 트레이너는 회원님의 담당 트레이너가 아닙니다. 리뷰를 작성할 수 없습니다.</h3>"
 
-            # 작성 처리
             new_rating = int(request.form['rating'])
             new_text = request.form['review']
 
@@ -61,24 +57,34 @@ def profile(trainer_id):
             """, (user_id, trainer_id, new_rating, new_text))
             conn.commit()
             return redirect(url_for('profile.profile', trainer_id=trainer_id))
-        
-        # 리뷰 조회 쿼리
-        cursor.execute("""
+
+    # 정렬 기준 처리
+    sort = request.args.get('sort', 'latest')
+
+    order_clause = {
+        'latest': 'r.created_at DESC',
+        'oldest': 'r.created_at ASC',
+        'high': 'r.rating DESC',
+        'low': 'r.rating ASC'
+    }.get(sort, 'r.created_at DESC')  # 기본: 최신순
+
+    with conn.cursor() as cursor:
+        cursor.execute(f"""
             SELECT r.review_id, r.user_id, r.rating, r.comment, r.created_at, r.is_hidden, u.login_id
             FROM reviews r
             JOIN users u ON r.user_id = u.user_id
             WHERE r.trainer_id = %s
-            ORDER BY r.created_at DESC
+            ORDER BY {order_clause}
         """, (trainer_id,))
-
         reviews = cursor.fetchall()
+
 
     # 리뷰 통계 계산
     visible_reviews = [r for r in reviews if not r['is_hidden']]
     review_count = len(visible_reviews)
     avg_rating = round(sum(r["rating"] for r in visible_reviews) / review_count, 1) if review_count > 0 else 0.0
 
-    # === 이 유저가 등록한 트레이너인지 확인 (템플릿 전달용)
+    # === 이 유저가 등록한 트레이너인지 확인
     is_registered = False
     if user_id:
         with conn.cursor() as cursor:
@@ -154,7 +160,8 @@ def profile(trainer_id):
         age_data=age_data,
         image_sources=image_sources,
         is_admin=session.get('is_admin') == 1,
-        is_registered=is_registered
+        is_registered=is_registered,
+        sort=sort
     )
 
 @profile_bp.route('/profile/<int:trainer_id>/delete_review', methods=['POST'])
@@ -190,21 +197,50 @@ def toggle_review(trainer_id):
 
     return redirect(url_for('profile.profile', trainer_id=trainer_id))
 
-@profile_bp.route('/profile/<int:trainer_id>/consultations', methods=['GET'])
-def consultations(trainer_id):
-    if not session.get('is_admin'):
-        abort(403)
+@profile_bp.route('/profile/<int:trainer_id>/reviews')
+def get_reviews(trainer_id):
+    sort = request.args.get('sort', 'latest')
+    order_clause = {
+        'latest': 'r.created_at DESC',
+        'oldest': 'r.created_at ASC',
+        'high': 'r.rating DESC',
+        'low': 'r.rating ASC'
+    }.get(sort, 'r.created_at DESC')
 
     with conn.cursor() as cursor:
         cursor.execute("""
-            SELECT r.reservation_id, u.login_id, u.uname, u.phone,
-                   r.reservation_date, r.reservation_time, r.num_people,
-                   r.status, r.created_at
-            FROM reservations r
+            SELECT r.review_id, r.user_id, r.rating, r.comment, r.created_at, r.is_hidden, u.login_id
+            FROM reviews r
             JOIN users u ON r.user_id = u.user_id
             WHERE r.trainer_id = %s
-            ORDER BY r.created_at DESC
-        """, (trainer_id,))
-        consults = cursor.fetchall()
+            ORDER BY """ + order_clause, (trainer_id,))
+        reviews = cursor.fetchall()
 
-    return render_template('admin_consultations.html', reservations=consults, trainer_id=trainer_id)
+    return jsonify({
+        'html': render_template(
+            'partials/review_list.html',
+            reviews=reviews,
+            trainer_id=trainer_id,
+            user_id=session.get('user_id') or 0,
+            is_admin=session.get('is_admin') == 1
+        )
+    })
+
+# @profile_bp.route('/profile/<int:trainer_id>/consultations', methods=['GET'])
+# def consultations(trainer_id):
+#     if not session.get('is_admin'):
+#         abort(403)
+
+#     with conn.cursor() as cursor:
+#         cursor.execute("""
+#             SELECT r.reservation_id, u.login_id, u.uname, u.phone,
+#                    r.reservation_date, r.reservation_time, r.num_people,
+#                    r.status, r.created_at
+#             FROM reservations r
+#             JOIN users u ON r.user_id = u.user_id
+#             WHERE r.trainer_id = %s
+#             ORDER BY r.created_at DESC
+#         """, (trainer_id,))
+#         consults = cursor.fetchall()
+
+#     return render_template('admin_consultations.html', reservations=consults, trainer_id=trainer_id)

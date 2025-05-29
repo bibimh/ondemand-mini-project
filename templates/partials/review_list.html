@@ -1,0 +1,37 @@
+<!-- templates/partials/review_list.html -->
+
+{% for review in reviews %}
+<div class="review-card">
+    {% if review.is_hidden and not is_admin and user_id != review.user_id %}
+        <p style="color: gray;">🙈 이 댓글은 관리자에 의해 비공개 처리되었습니다.</p>
+    {% else %}
+        <p class="review-meta">
+            {{ review.login_id[:-3] + '***' }} | {{ review.created_at.strftime('%Y-%m-%d') }}
+        </p>
+        <p class="review-stars">
+            <span class="star-yellow">{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}</span>
+            <span class="review-score">{{ review.rating }}</span>
+        </p>
+        <p>{{ review.comment | replace('\n', '<br>') | safe }}</p>
+    {% endif %}
+
+    {% if user_id == review.user_id %}
+        {% if review.is_hidden %}
+            <p style="color: gray; font-size: 13px;">(이 댓글은 관리자에 의해 비공개 처리되었습니다)</p>
+        {% endif %}
+        <form method="POST" action="{{ url_for('profile.delete_review', trainer_id=trainer_id) }}">
+            <input type="hidden" name="review_id" value="{{ review.review_id }}">
+            <button type="submit" class="delete-btn">리뷰 삭제</button>
+        </form>
+    {% endif %}
+
+    {% if is_admin %}
+        <form method="POST" action="{{ url_for('profile.toggle_review', trainer_id=trainer_id) }}">
+            <input type="hidden" name="review_id" value="{{ review.review_id }}">
+            <button type="submit" class="hide-btn">
+                {% if review.is_hidden %}복구{% else %}숨기기{% endif %}
+            </button>
+        </form>
+    {% endif %}
+</div>
+{% endfor %}

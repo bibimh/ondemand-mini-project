@@ -106,45 +106,22 @@
         {% endif %}
     </section>
 
+    <!-- 리뷰 정렬 -->
+    <div style="text-align: right; margin-bottom: 10px;">
+        <div class="sort-box">
+            <label for="sort" class="sort-label">정렬:</label>
+            <select id="sort" class="sort-select" onchange="changeSort()">
+                <option value="latest" {% if sort == 'latest' %}selected{% endif %}>최신순</option>
+                <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>오래된순</option>
+                <option value="high" {% if sort == 'high' %}selected{% endif %}>별점 높은순</option>
+                <option value="low" {% if sort == 'low' %}selected{% endif %}>별점 낮은순</option>
+            </select>
+        </div>
+    </div>
+
     <!-- 리뷰 목록 -->
-    <section class="review-list">
-        {% for review in reviews %}
-            <div class="review-card">
-                {% if review.is_hidden and not is_admin and session['user_id'] != review.user_id %}
-                    <!-- 숨김 + 본인 아님 + 관리자 아님 -->
-                    <p style="color: gray;">🙈 관리자에 의해 숨김 처리된 댓글입니다.</p>
-                {% else %}
-                    <!-- 관리자 or 본인 or 일반 댓글 -->
-                    <p class="review-meta">
-                        {{ review.login_id[:-3] + '***' }} | {{ review.created_at.strftime('%Y-%m-%d') }}
-                    </p>
-                    <p class="review-stars">
-                        <span class="star-yellow">{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}</span>
-                        <span class="review-score">{{ review.rating }}</span>
-                    </p>
-                    <p>{{ review.comment | replace('\n', '<br>') | safe }}</p>
-                {% endif %}
-
-                {% if session['user_id'] == review.user_id %}
-                    {% if review.is_hidden %}
-                        <p style="color: gray; font-size: 13px;">(이 댓글은 관리자에 의해 숨김 처리되었습니다)</p>
-                    {% endif %}
-                    <form method="POST" action="{{ url_for('profile.delete_review', trainer_id=trainer_id) }}">
-                        <input type="hidden" name="review_id" value="{{ review.review_id }}">
-                        <button type="submit" class="delete-btn">리뷰 삭제</button>
-                    </form>
-                {% endif %}
-
-                {% if is_admin %}
-                    <form method="POST" action="{{ url_for('profile.toggle_review', trainer_id=trainer_id) }}">
-                        <input type="hidden" name="review_id" value="{{ review.review_id }}">
-                        <button type="submit" class="hide-btn">
-                            {% if review.is_hidden %}복구{% else %}숨기기{% endif %}
-                        </button>
-                    </form>
-                {% endif %}
-            </div>
-        {% endfor %}
+    <section class="review-list" id="review-list">
+        {% include 'partials/review_list.html' %}
     </section>
 </div>
 
@@ -249,6 +226,36 @@
 
     window.addEventListener('load', updateSlide);
     window.addEventListener('resize', updateSlide);
+
+    // 새로고침 시 스크롤 위치 기억
+    window.addEventListener('beforeunload', function () {
+        localStorage.setItem('scrollPosition', window.scrollY);
+    });
+
+    // 로드되면 스크롤 위치 복원
+    window.addEventListener('load', function () {
+        const scrollY = localStorage.getItem('scrollPosition');
+        if (scrollY !== null) {
+            window.scrollTo(0, parseInt(scrollY));
+            localStorage.removeItem('scrollPosition');
+        }
+    });
+
+    // 정렬 select 변경 시 현재 스크롤 위치 유지하며 새로고침
+    function changeSort() {
+        const sort = document.getElementById('sort').value;
+        const trainerId = "{{ trainer_id }}";
+
+        fetch(`/profile/${trainerId}/reviews?sort=${sort}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('review-list').innerHTML = data.html;
+
+                // URL에 정렬값 반영 (뒤로가기 시에도 반영됨)
+                history.replaceState(null, '', `?sort=${sort}`);
+            })
+            .catch(error => console.error("리뷰 정렬 오류:", error));
+    }
 </script>
 </body>
 </html>

@@ -185,3 +185,21 @@
     background: #f9f9f9;
     border-left: 4px solid #ccc;
 }
+
+.sort-box {
+    display: inline-block;
+    padding: 5px;
+}
+
+.sort-label {
+    margin-right: 8px;
+    font-weight: 600;
+    color: #555;
+}
+
+.sort-select {
+    padding: 6px 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-family: 'Noto Sans KR', sans-serif;
+}

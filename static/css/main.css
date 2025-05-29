@@ -61,9 +61,11 @@ body::before {
 
 .left-box {
   width: 400px;
+  height: 650px; /* 높이 증가 */
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative; /* 텍스트 절대 위치를 위한 상대 위치 */
 }
 
 .image-link img {
@@ -78,10 +80,10 @@ body::before {
   transform: scale(1.03);
 }
 
-/* 텍스트 그룹 */
+/* 텍스트 그룹 - 더 아래로 이동하고 z-index 최상위 */
 .main-title {
     position: absolute;
-    top: 620px;
+    top: 500px; /* 더 아래로 이동 */
     left: 50%;
     transform: translateX(-50%);
     width: 480px;
@@ -92,26 +94,32 @@ body::before {
     text-align: center;
     word-break: keep-all;
     white-space: normal;
+    z-index: 999; /* 최상위 계층 */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .fitpick {
     position: absolute;
-    top: 725px;
+    top: 605px; /* 더 아래로 이동 */
     left: calc(50% + 50px);
     transform: translateX(-50%);
     font-size: 45px;
     font-weight: 600;
     color: #000;
     text-align: center;
+    z-index: 999; /* 최상위 계층 */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
 .arrow {
     position: absolute;
-    top: 730px;
+    top: 610px; /* 더 아래로 이동 */
     left: calc(50% + 125px);
     width: 76px;
     height: 50px;
     object-fit: contain;
+    z-index: 999; /* 최상위 계층 */
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
 }
 
 /* 오른쪽 이미지 그리드 */
@@ -124,15 +132,12 @@ body::before {
   justify-content: center;
 }
 
-.right-box img {
+/* 기존 hover 효과 제거하고 새로운 클래스 기반 효과로 대체 */
+.right-box .trainer-item img,
+.right-box .coming-soon img {
   width: 140px;
   height: 180px;
   object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.right-box img:hover {
-  transform: scale(1.05);
 }
 
 /* 링크 스타일 */
@@ -148,11 +153,121 @@ header {
   right: 30px;
   display: flex;
   gap: 20px;
-  z-index: 10;
+  z-index: 100; /* 헤더도 상위 계층 */
 }
 
 header a {
   font-size: 1.2rem;
   font-weight: 600;
   color: black;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+  .container {
+    flex-direction: column;
+    height: auto;
+    min-height: 90vh;
+    padding: 30px;
+    overflow-y: visible;
+  }
+  
+  .left-wrapper {
+    width: 100%;
+    margin-bottom: 40px;
+  }
+  
+  .left-box {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    height: auto;
+  }
+  
+  .right-box {
+    width: 100%;
+    justify-content: center;
+    gap: 15px 20px;
+  }
+}
+
+@media (max-width: 900px) {
+  .container {
+    padding: 20px;
+  }
+  
+  .right-box {
+    grid-template-columns: repeat(3, 120px);
+    grid-template-rows: repeat(3, 150px);
+    gap: 12px 15px;
+  }
+  
+  .left-box {
+    max-width: 350px;
+  }
+  
+  .image-link img {
+    width: 350px;
+    height: 500px;
+  }
+  
+  header {
+    position: relative;
+    top: auto;
+    right: auto;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 15px;
+  }
+  
+  .right-box {
+    grid-template-columns: repeat(2, 100px);
+    grid-template-rows: repeat(5, 130px);
+    gap: 10px;
+  }
+  
+  .left-box {
+    max-width: 300px;
+  }
+  
+  .image-link img {
+    width: 300px;
+    height: 420px;
+  }
+  
+  header a {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .right-box {
+    grid-template-columns: repeat(2, 90px);
+    grid-template-rows: repeat(5, 120px);
+    gap: 8px;
+  }
+  
+  .left-box {
+    max-width: 260px;
+  }
+  
+  .image-link img {
+    width: 260px;
+    height: 360px;
+  }
+  
+  header {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  header a {
+    font-size: 0.9rem;
+  }
 }

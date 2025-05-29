@@ -10,7 +10,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden;
+    overflow: hidden; /* 데스크톱에서 오버플로우 숨김 */
 }
 
 /* 배경 이미지 + 블러 효과 */
@@ -40,4 +40,50 @@ body::before {
     padding: 40px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
     overflow-y: auto;
+}
+
+/* 반응형 오버플로우 설정 */
+@media (max-width: 1200px) {
+    body {
+        overflow: visible; /* 태블릿에서 스크롤 허용 */
+        align-items: flex-start;
+        padding-top: 20px;
+    }
+    
+    .container {
+        min-height: auto;
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 900px) {
+    body {
+        overflow-x: hidden;
+        overflow-y: auto;
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .container {
+        width: 95%;
+        padding: 30px 20px;
+        margin: 10px 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        width: 98%;
+        padding: 20px 15px;
+        margin: 5px 0;
+    }
+}
+
+@media (max-width: 400px) {
+    .container {
+        width: 100%;
+        padding: 15px 10px;
+        margin: 0;
+        border-radius: 0;
+    }
 }

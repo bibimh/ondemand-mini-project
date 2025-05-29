@@ -16,7 +16,7 @@ def consultation_page(trainer_id):
     """상담 페이지 - 트레이너 프로필에서 상담신청하기 버튼 클릭시"""
     # 로그인 확인 - 로그인 안했으면 로그인 페이지로
     if 'user_id' not in session:
-        return redirect(url_for('auth.login', next=request.url))
+        return redirect(url_for('login', next=request.url))
     
     # 활성화된 트레이너만 조회 (is_hidden = 0)
     trainer = get_active_trainer_by_id(trainer_id)
@@ -129,7 +129,7 @@ def create_consultation_api():
 def my_consultations():
     """내 상담 신청 목록 조회"""
     if 'user_id' not in session:
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('login'))
     
     try:
         from db.db import get_db
@@ -156,7 +156,7 @@ def admin_consultations():
     """관리자 전용 - 상담 예약 목록 보기"""
     # 관리자 권한 확인
     if 'user_id' not in session or not session.get('is_admin'):
-        return redirect(url_for('auth.login'))
+        return redirect(url_for('login'))
     
     try:
         from db.db import get_db

@@ -1,0 +1,158 @@
+/* main_combined.css */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+html, body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* 배경은 고정되도록 설정 */
+  position: relative;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: url("../images/background.jpg") center center / cover no-repeat fixed;
+}
+
+/* 배경 흐림 효과 */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: url("../images/background.jpg") center center / cover no-repeat;
+  background-attachment: fixed;
+  opacity: 0.7;
+  z-index: -1;
+}
+
+/* 메인 컨테이너: 흰색 박스 내부만 스크롤되도록 */
+.container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  width: 95%;
+  max-width: 1400px;
+  height: 90vh;
+  background-color: #fff;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  padding: 50px;
+  overflow-y: auto;
+}
+
+/* 왼쪽 영역 */
+.left-wrapper {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.left-box {
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.image-link img {
+  width: 400px;
+  height: 600px;
+  object-fit: cover;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  transition: transform 0.3s ease;
+}
+
+.image-link img:hover {
+  transform: scale(1.03);
+}
+
+/* 텍스트 그룹 */
+.main-title {
+    position: absolute;
+    top: 620px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 480px;
+    font-size: 55px;
+    font-weight: 600;
+    color: #000;
+    line-height: 55px;
+    text-align: center;
+    word-break: keep-all;
+    white-space: normal;
+}
+
+.fitpick {
+    position: absolute;
+    top: 725px;
+    left: calc(50% + 50px);
+    transform: translateX(-50%);
+    font-size: 45px;
+    font-weight: 600;
+    color: #000;
+    text-align: center;
+}
+
+.arrow {
+    position: absolute;
+    top: 730px;
+    left: calc(50% + 125px);
+    width: 76px;
+    height: 50px;
+    object-fit: contain;
+}
+
+/* 오른쪽 이미지 그리드 */
+.right-box {
+  width: 50%;
+  display: grid;
+  grid-template-columns: repeat(3, 140px);
+  grid-template-rows: repeat(3, 180px);
+  gap: 20px 30px;
+  justify-content: center;
+}
+
+.right-box img {
+  width: 140px;
+  height: 180px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.right-box img:hover {
+  transform: scale(1.05);
+}
+
+/* 링크 스타일 */
+a {
+  text-decoration: none;
+  color: black;
+}
+
+/* 상단 헤더 */
+header {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  display: flex;
+  gap: 20px;
+  z-index: 10;
+}
+
+header a {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: black;
+}

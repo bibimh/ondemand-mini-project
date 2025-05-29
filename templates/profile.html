@@ -191,7 +191,7 @@
         
         <br><hr>
 
-        <!-- 후기 요약 -->
+        <!-- 리뷰 통계 -->
         <section class="review-summary">
             <p>
                 후기 <span class="summary-star">★</span>
@@ -201,25 +201,41 @@
             <!-- 필터 버튼 자리 예약 -->
         </section>
 
-        <!-- 후기 작성 -->
+        <!-- 리뷰 작성 폼 -->
         <section class="review-form">
             <h4>리뷰 작성하기</h4>
-            <form method="POST">
-                <label>별점:
-                    <select name="rating">
-                        {% for i in range(5, 0, -1) %}
-                            <option value="{{ i }}">{{ i }}점</option>
-                        {% endfor %}
-                    </select>
-                </label>
-                <br><br>
-                <label>후기:</label><br>
-                <textarea name="review" rows="4" cols="50" required></textarea><br><br>
-                <button type="submit" class="submit-btn">리뷰 등록</button>
-            </form>
+
+            {% if not session['user_id'] %}
+                <p>✋ 로그인 후 작성 가능합니다.</p>
+
+            {% else %}
+                {% set is_registered = false %}
+                {% for reg in registrations %}
+                    {% if reg.trainer_id == trainer_id and reg.user_id == session['user_id'] %}
+                        {% set is_registered = true %}
+                    {% endif %}
+                {% endfor %}
+
+                {% if is_registered %}
+                    <form method="POST">
+                        <label>별점:
+                            <select name="rating">
+                                {% for i in range(5, 0, -1) %}
+                                    <option value="{{ i }}">{{ i }}점</option>
+                                {% endfor %}
+                            </select>
+                        </label><br><br>
+                        <label>후기:</label><br>
+                        <textarea name="review" rows="4" cols="50" required></textarea><br><br>
+                        <button type="submit" class="submit-btn">리뷰 등록</button>
+                    </form>
+                {% else %}
+                    <p>😢 해당 트레이너는 회원님의 담당 트레이너가 아닙니다. 리뷰를 작성할 수 없습니다.</p>
+                {% endif %}
+            {% endif %}
         </section>
 
-        <!-- 후기 리스트 -->
+        <!-- 리뷰 리스트 -->
         <section class="review-list">
             {% for review in reviews %}
                 <div class="review-card">

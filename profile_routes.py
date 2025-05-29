@@ -1,6 +1,6 @@
 # profile_routes.py
 
-from flask import Blueprint, render_template, request, abort, redirect, url_for
+from flask import Blueprint, render_template, request, abort, redirect, session, url_for
 from db.db import conn
 from collections import defaultdict
 from datetime import datetime
@@ -11,6 +11,9 @@ profile_bp = Blueprint('profile', __name__)
 @profile_bp.route('/profile/<int:trainer_id>', methods=['GET', 'POST'])
 def profile(trainer_id):
     conn.ping(reconnect=True)  # 끊어진 연결 대비
+
+    # 세션 확인
+    user_id = session.get('user_id')
 
     with conn.cursor() as cursor:
         cursor.execute("SELECT * FROM trainers WHERE trainer_id = %s", (trainer_id,))
@@ -33,17 +36,30 @@ def profile(trainer_id):
 
     # === 리뷰 처리 ===
     with conn.cursor() as cursor:
+        # === 리뷰 작성 (POST 요청 시) ===
         if request.method == 'POST':
+            if not user_id:
+                return redirect(url_for('login'))
+
+            # 이 사용자가 이 트레이너에게 등록한 적이 있는지 확인
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt FROM member_regist
+                WHERE user_id = %s AND trainer_id = %s
+            """, (user_id, trainer_id))
+            is_registered = cursor.fetchone()['cnt'] > 0
+
+            if not is_registered:
+                return "<h3>해당 트레이너는 회원님의 담당 트레이너가 아닙니다. 리뷰를 작성할 수 없습니다.</h3>"
+
+            # 작성 처리
             new_rating = int(request.form['rating'])
             new_text = request.form['review']
-            user_id = 1  # 임시 사용자
 
             cursor.execute("""
                 INSERT INTO reviews (user_id, trainer_id, rating, comment)
                 VALUES (%s, %s, %s, %s)
             """, (user_id, trainer_id, new_rating, new_text))
             conn.commit()
-
             return redirect(url_for('profile.profile', trainer_id=trainer_id))
         
         cursor.execute("""

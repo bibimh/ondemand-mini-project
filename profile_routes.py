@@ -189,3 +189,22 @@ def toggle_review(trainer_id):
         conn.commit()
 
     return redirect(url_for('profile.profile', trainer_id=trainer_id))
+
+@profile_bp.route('/profile/<int:trainer_id>/consultations', methods=['GET'])
+def consultations(trainer_id):
+    if not session.get('is_admin'):
+        abort(403)
+
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            SELECT r.reservation_id, u.login_id, u.uname, u.phone,
+                   r.reservation_date, r.reservation_time, r.num_people,
+                   r.status, r.created_at
+            FROM reservations r
+            JOIN users u ON r.user_id = u.user_id
+            WHERE r.trainer_id = %s
+            ORDER BY r.created_at DESC
+        """, (trainer_id,))
+        consults = cursor.fetchall()
+
+    return render_template('admin_consultations.html', reservations=consults, trainer_id=trainer_id)

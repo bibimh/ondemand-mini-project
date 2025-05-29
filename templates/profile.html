@@ -31,15 +31,21 @@
             <h2>{{ trainer.tname }} 트레이너</h2>
             <div class="trainer-intro">{{ trainer.introduce | safe }}</div>
             <br>
-            <form action="/consult" method="get">
-                <input type="hidden" name="trainer_id" value="{{ trainer_id }}">
-                <button class="consult-btn">💬 상담 신청하기</button>
-            </form>
+            {% if not is_admin %}
+                <form action="/consult" method="get">
+                    <input type="hidden" name="trainer_id" value="{{ trainer_id }}">
+                    <button class="consult-btn">💬 상담 신청하기</button>
+                </form>
+            {% endif %}
 
             {% if is_admin %}
                 <br>
                 <a href="{{ url_for('edit_profile.edit_profile', trainer_id=trainer_id) }}">
-                    <button class="edit-btn">프로필 수정하기</button>
+                    <button class="edit-btn">🖍 프로필 수정하기</button>
+                </a>
+                <br> <br>
+                <a href="{{ url_for('consultation.admin_consultations') }}?trainer_id={{ trainer_id }}">
+                    <button class="edit-btn">📋 상담 예약 현황 보기</button>
                 </a>
                 <br><br>
             {% endif %}

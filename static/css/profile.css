@@ -177,3 +177,11 @@
     cursor: default;
     pointer-events: none;
 }
+
+.review-card p.hidden-msg {
+    color: gray;
+    font-style: italic;
+    padding: 10px;
+    background: #f9f9f9;
+    border-left: 4px solid #ccc;
+}

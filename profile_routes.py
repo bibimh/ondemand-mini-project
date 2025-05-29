@@ -64,16 +64,19 @@ def profile(trainer_id):
         
         # 리뷰 조회 쿼리
         cursor.execute("""
-            SELECT r.review_id, r.user_id, r.rating, r.comment, r.created_at, u.login_id
-            FROM reviews r JOIN users u ON r.user_id = u.user_id
+            SELECT r.review_id, r.user_id, r.rating, r.comment, r.created_at, r.is_hidden, u.login_id
+            FROM reviews r
+            JOIN users u ON r.user_id = u.user_id
             WHERE r.trainer_id = %s
             ORDER BY r.created_at DESC
         """, (trainer_id,))
+
         reviews = cursor.fetchall()
 
     # 리뷰 통계 계산
-    review_count = len(reviews)
-    avg_rating = round(sum(r["rating"] for r in reviews) / review_count, 1) if review_count > 0 else 0.0
+    visible_reviews = [r for r in reviews if not r['is_hidden']]
+    review_count = len(visible_reviews)
+    avg_rating = round(sum(r["rating"] for r in visible_reviews) / review_count, 1) if review_count > 0 else 0.0
 
     # === 이 유저가 등록한 트레이너인지 확인 (템플릿 전달용)
     is_registered = False
@@ -164,6 +167,25 @@ def delete_review(trainer_id):
 
     with conn.cursor() as cursor:
         cursor.execute("DELETE FROM reviews WHERE review_id = %s AND user_id = %s", (review_id, user_id))
+        conn.commit()
+
+    return redirect(url_for('profile.profile', trainer_id=trainer_id))
+
+@profile_bp.route('/profile/<int:trainer_id>/toggle_review', methods=['POST'])
+def toggle_review(trainer_id):
+    if not session.get('is_admin'):
+        abort(403)
+
+    review_id = request.form.get('review_id')
+    with conn.cursor() as cursor:
+        # 현재 상태 확인
+        cursor.execute("SELECT is_hidden FROM reviews WHERE review_id = %s", (review_id,))
+        result = cursor.fetchone()
+        if result is None:
+            abort(404)
+
+        new_state = not result['is_hidden']
+        cursor.execute("UPDATE reviews SET is_hidden = %s WHERE review_id = %s", (new_state, review_id))
         conn.commit()
 
     return redirect(url_for('profile.profile', trainer_id=trainer_id))

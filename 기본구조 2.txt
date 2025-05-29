@@ -1,0 +1,57 @@
+MERGE_FITPICK/
+├── app.py
+├── requirements.txt
+├── .gitignore
+│
+├── db/
+│   ├── consultation_init.sql
+│   ├── db.py
+│   └── __pycache__/
+│
+├── models/
+│   └── consultation.py
+│
+├── static/
+│   ├── css/
+│   │   ├── background.css
+│   │   ├── consultation.css
+│   │   ├── edit_profile.css
+│   │   ├── login.css
+│   │   ├── main_background.css
+│   │   ├── main.css
+│   │   └── profile.css
+│   │
+│   ├── images/
+│   │   ├── arrow.png
+│   │   ├── background.jpg
+│   │   ├── default.jpg
+│   │   ├── trainer3_1.jpg
+│   │   ├── trainer3_2.jpg
+│   │   ├── trainer4_1.jpg
+│   │   ├── trainer5_1.jpg
+│   │   ├── trainer5_2.jpg
+│   │   └── trainer6_1.jpg
+│   │
+│   └── js/
+│       ├── consultation.js
+│       ├── login.js
+│       └── validation.js
+│
+├── templates/
+│   ├── admin_consultations.html
+│   ├── base.html
+│   ├── consultation.html
+│   ├── edit_profile.html
+│   ├── login.html
+│   ├── mainpage.html
+│   ├── match_form.html
+│   ├── match_result.html
+│   ├── profile.html
+│   └── partials/
+│       └── review_list.html
+│
+├── consultation_routes.py
+├── init_images.py
+├── mainpage_route.py
+├── profile_edit_routes.py
+└── profile_routes.py

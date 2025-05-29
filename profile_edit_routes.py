@@ -1,17 +1,27 @@
 # profile_edit_routes.py
 
 from flask import Blueprint, session, render_template, request, redirect, url_for, abort
-from db.db import get_db
+import pymysql
 from datetime import datetime
 import base64
 
 edit_profile_bp = Blueprint('edit_profile', __name__)
 
+# DB 연결 함수
+def get_db():
+    return pymysql.connect(
+        host='192.168.40.14',
+        user='fitpickuser',
+        password='fitpick1234',
+        db='fitpick',
+        charset='utf8mb4',
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
 @edit_profile_bp.route('/profile/<int:trainer_id>/edit', methods=['GET', 'POST'])
 def edit_profile(trainer_id):
-    with get_db() as conn:
-        conn.ping(reconnect=True)
-
+    conn = get_db()
+    try:
         if request.method == 'POST':
             tname = request.form.get('tname', '')
             introduce = request.form.get('introduce', '')
@@ -36,7 +46,7 @@ def edit_profile(trainer_id):
                     cursor.execute("SELECT * FROM trainers WHERE trainer_id = %s", (trainer_id,))
                     trainer = cursor.fetchone()
 
-                    cursor.execute("SELECT name, image_data FROM site_images WHERE name LIKE %s", (f"트레이너{trainer_id}_%",))
+                    cursor.execute("SELECT name, image_data FROM site_images WHERE name LIKE %s", (f"trainer{trainer_id}_%",))
                     image_rows = cursor.fetchall()
 
                 image_sources = [
@@ -82,7 +92,7 @@ def edit_profile(trainer_id):
 
                 # 새 이미지 추가
                 new_files = request.files.getlist('new_images')
-                cursor.execute("SELECT COUNT(*) as count FROM site_images WHERE name LIKE %s", (f"%trainer{trainer_id}_%",))
+                cursor.execute("SELECT COUNT(*) as count FROM site_images WHERE name LIKE %s", (f"trainer{trainer_id}_%",))
                 existing_count = cursor.fetchone()['count']
 
                 for i, file in enumerate(new_files):
@@ -98,40 +108,46 @@ def edit_profile(trainer_id):
 
             return redirect(url_for('profile.profile', trainer_id=trainer_id))
 
-    # ===== GET 요청 처리 =====
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT * FROM trainers WHERE trainer_id = %s", (trainer_id,))
-        trainer = cursor.fetchone()
+        # ===== GET 요청 처리 =====
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM trainers WHERE trainer_id = %s", (trainer_id,))
+            trainer = cursor.fetchone()
 
-        cursor.execute("SELECT name, image_data FROM site_images WHERE name LIKE %s", (f"trainer{trainer_id}_%",))
-        image_rows = cursor.fetchall()
+            cursor.execute("SELECT name, image_data FROM site_images WHERE name LIKE %s", (f"trainer{trainer_id}_%",))
+            image_rows = cursor.fetchall()
 
-    image_sources = [
-        {
-            'name': row['name'],
-            'src': f"data:image/jpeg;base64,{base64.b64encode(row['image_data']).decode('utf-8')}"
-        }
-        for row in image_rows
-    ]
+        image_sources = [
+            {
+                'name': row['name'],
+                'src': f"data:image/jpeg;base64,{base64.b64encode(row['image_data']).decode('utf-8')}"
+            }
+            for row in image_rows
+        ]
 
-    return render_template(
-        'edit_profile.html',
-        trainer=trainer,
-        trainer_id=trainer_id,
-        image_sources=image_sources
-    )
+        return render_template(
+            'edit_profile.html',
+            trainer=trainer,
+            trainer_id=trainer_id,
+            image_sources=image_sources
+        )
+    
+    finally:
+        conn.close()  # 반드시 연결 닫기
 
 @edit_profile_bp.route('/profile/<int:trainer_id>/delete', methods=['GET'])
 def delete_profile(trainer_id):
     if session.get('is_admin') != 1:
         abort(403)
-    with get_db() as conn:
-        conn.ping(reconnect=True)
+        
+    conn = get_db()
+    try:
         with conn.cursor() as cursor:
             # 트레이너 삭제
             cursor.execute("DELETE FROM trainers WHERE trainer_id = %s", (trainer_id,))
             # 이미지도 삭제
             cursor.execute("DELETE FROM site_images WHERE name LIKE %s", (f"trainer{trainer_id}%",))
             conn.commit()
+    finally:
+        conn.close()
 
-    return redirect(url_for('info_page'))  # 삭제 후 info 페이지로 이동
+    return redirect('/')  # 삭제 후 메인 페이지로 이동

@@ -161,6 +161,7 @@ def profile(trainer_id):
             age_data=age_data,
             image_sources=image_sources,
             is_admin=session.get('is_admin') == 1,
+            user_id=session.get('user_id') or 0,
             is_registered=is_registered,
             sort=sort
         )

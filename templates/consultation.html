@@ -456,9 +456,11 @@
 
         <div class="trainer-info">
             <div class="trainer-profile">
-                <img src="{{ trainer.image_url if trainer.image_url else '/static/images/default-trainer.jpg' }}" 
+                <!-- ★ 이미지 경로 수정: /trainer-image/{trainer_id} 사용 -->
+                <img src="/trainer-image/{{ trainer.trainer_id }}" 
                      alt="{{ trainer.tname }} 트레이너" 
-                     class="trainer-image">
+                     class="trainer-image"
+                     onerror="this.src='/image/48'">
                 <div class="trainer-details">
                     <h2>{{ trainer.tname }} 트레이너</h2>
                     <p>전문 트레이너</p>
@@ -887,4 +889,16 @@
         });
     </script>
 </body>
-</html>
+</html><div class="trainer-info">
+            <div class="trainer-profile">
+                <!-- ★ 이미지 경로 수정: /trainer-image/{trainer_id} 사용 -->
+                <img src="/trainer-image/{{ trainer.trainer_id }}" 
+                     alt="{{ trainer.tname }} 트레이너" 
+                     class="trainer-image"
+                     onerror="this.src='/image/48'">
+                <div class="trainer-details">
+                    <h2>{{ trainer.tname }} 트레이너</h2>
+                    <p>전문 트레이너</p>
+                </div>
+            </div>
+        </div>

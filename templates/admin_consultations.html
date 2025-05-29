@@ -191,6 +191,7 @@
             border-radius: 50%;
             object-fit: cover;
             border: 2px solid #E0D9D5;
+            background-color: #f0f0f0;
         }
 
         .trainer-details {
@@ -420,8 +421,11 @@
                                 <td>#{{ reservation.reservation_id }}</td>
                                 <td>
                                     <div class="trainer-info">
-                                        <img src="{{ reservation.image_url if reservation.image_url else '/static/images/default-trainer.jpg' }}" 
-                                             alt="{{ reservation.tname }}" class="trainer-avatar">
+                                        <!-- ★ 이미지 URL 수정: /image/트레이너ID 형식 사용 -->
+                                        <img src="/image/{{ reservation.trainer_id }}" 
+                                             alt="{{ reservation.tname }}" 
+                                             class="trainer-avatar"
+                                             onerror="this.src='/image/48'">
                                         <div class="trainer-details">
                                             <div class="trainer-name">{{ reservation.tname }}</div>
                                             <div class="trainer-specialty">전문 트레이너</div>

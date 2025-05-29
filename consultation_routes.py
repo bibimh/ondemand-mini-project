@@ -14,9 +14,9 @@ consultation_bp = Blueprint('consultation', __name__)
 @consultation_bp.route('/consultation/<int:trainer_id>')
 def consultation_page(trainer_id):
     """상담 페이지 - 트레이너 프로필에서 상담신청하기 버튼 클릭시"""
-    # 로그인 확인 - 로그인 안했으면 로그인 페이지로
+    # 로그인 확인 - 로그인 안했으면 로그인 페이지로 (현재 페이지 정보 포함)
     if 'user_id' not in session:
-        return redirect(url_for('auth.login', next=request.url))
+        return redirect(f'/login?next={request.url}')
     
     # 활성화된 트레이너만 조회 (is_hidden = 0)
     trainer = get_active_trainer_by_id(trainer_id)
@@ -129,7 +129,7 @@ def create_consultation_api():
 def my_consultations():
     """내 상담 신청 목록 조회"""
     if 'user_id' not in session:
-        return redirect(url_for('auth.login'))
+        return redirect('/login')
     
     try:
         from db.db import get_db
@@ -156,7 +156,7 @@ def admin_consultations():
     """관리자 전용 - 상담 예약 목록 보기"""
     # 관리자 권한 확인
     if 'user_id' not in session or not session.get('is_admin'):
-        return redirect(url_for('auth.login'))
+        return redirect('/login')
     
     try:
         from db.db import get_db
@@ -211,7 +211,6 @@ def admin_consultations():
                         r.status,
                         r.created_at,
                         t.tname,
-                        t.image_url,
                         u.uname,
                         u.phone
                     FROM reservations r
@@ -224,14 +223,14 @@ def admin_consultations():
                 
                 # 시간 포맷 변환 (timedelta → 문자열)
                 for reservation in reservations:
-                    if isinstance(reservation['reservation_time'], type(reservation['reservation_time'])):
+                    if hasattr(reservation['reservation_time'], 'total_seconds'):
                         # timedelta를 HH:MM 형식으로 변환
                         total_seconds = int(reservation['reservation_time'].total_seconds())
                         hours = total_seconds // 3600
                         minutes = (total_seconds % 3600) // 60
                         reservation['reservation_time_str'] = f"{hours:02d}:{minutes:02d}"
                     else:
-                        reservation['reservation_time_str'] = str(reservation['reservation_time'])
+                        reservation['reservation_time_str'] = str(reservation['reservation_time'])[:5]
                 
                 # 각 예약 정보 출력 (디버깅용)
                 for i, res in enumerate(reservations[:3]):  # 처음 3개만

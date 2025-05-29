@@ -8,9 +8,63 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/background.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
+    <style>
+        /* 홈 버튼 스타일 추가 */
+        .home-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #DACFCB 0%, #DAD2CF 100%);
+            color: #CFC6C4;
+            text-decoration: none;
+            border-radius: 8px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            box-shadow: 0 2px 8px rgba(207, 198, 196, 0.2);
+        }
+
+        .home-btn:hover {
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(207, 198, 196, 0.3);
+        }
+
+        .home-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 6px rgba(207, 198, 196, 0.2);
+        }
+
+        /* 홈 버튼 컨테이너 스타일 */
+        .home-btn-container {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #E0D9D5;
+        }
+
+        /* 모바일 반응형 */
+        @media (max-width: 768px) {
+            .home-btn {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+            
+            .home-btn-container {
+                margin-bottom: 15px;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
 <div class="container">
+    <!-- ★ 홈으로 돌아가기 버튼 추가 -->
+    <div class="home-btn-container">
+        <a href="/" class="home-btn">🏠 홈으로 돌아가기</a>
+    </div>
+
     <!-- 트레이너 정보 -->
     <div class="trainer-section">
         <div class="trainer-left">
@@ -32,10 +86,14 @@
             <div class="trainer-intro">{{ trainer.introduce | safe }}</div>
             <br>
             {% if not is_admin %}
-                <form action="/consult" method="get">
-                    <input type="hidden" name="trainer_id" value="{{ trainer_id }}">
-                    <button class="consult-btn">💬 상담 신청하기</button>
-                </form>
+                <!-- ★ 상담 신청 버튼 - 로그인 확인 추가 -->
+                {% if session.get('user_id') %}
+                    <a href="/consultation/{{ trainer_id }}">
+                        <button class="consult-btn">💬 상담 신청하기</button>
+                    </a>
+                {% else %}
+                    <button class="consult-btn" onclick="showLoginAlert()">💬 상담 신청하기</button>
+                {% endif %}
             {% endif %}
 
             {% if is_admin %}
@@ -256,6 +314,29 @@
             })
             .catch(error => console.error("리뷰 정렬 오류:", error));
     }
+
+    // 로그인 필요 알림 및 리다이렉트
+    function showLoginAlert() {
+        if (confirm('🔒 상담 신청을 위해서는 로그인이 필요합니다.\n\n로그인 페이지로 이동하시겠습니까?')) {
+            // 현재 페이지 URL을 저장하여 로그인 후 돌아올 수 있도록 함
+            const currentUrl = window.location.pathname;
+            window.location.href = '/login?next=' + encodeURIComponent(currentUrl);
+        }
+    }
+
+    // 홈 버튼 클릭 시 확인 (선택사항)
+    document.addEventListener('DOMContentLoaded', function() {
+        const homeBtn = document.querySelector('.home-btn');
+        if (homeBtn) {
+            homeBtn.addEventListener('click', function(e) {
+                // 부드러운 전환을 위한 약간의 지연 (선택사항)
+                e.preventDefault();
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 100);
+            });
+        }
+    });
 </script>
 </body>
 </html>

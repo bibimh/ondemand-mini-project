@@ -2,7 +2,7 @@
 
 {% for review in reviews %}
 <div class="review-card">
-    {% if review.is_hidden and not is_admin and user_id != review.user_id %}
+    {% if review.is_hidden and not is_admin and user_id|int != review.user_id|int %}
         <p style="color: gray;">🙈 이 댓글은 관리자에 의해 비공개 처리되었습니다.</p>
     {% else %}
         <p class="review-meta">
@@ -15,7 +15,7 @@
         <p>{{ review.comment | replace('\n', '<br>') | safe }}</p>
     {% endif %}
 
-    {% if user_id == review.user_id %}
+    {% if user_id|int == review.user_id|int %}
         {% if review.is_hidden %}
             <p style="color: gray; font-size: 13px;">(이 댓글은 관리자에 의해 비공개 처리되었습니다)</p>
         {% endif %}

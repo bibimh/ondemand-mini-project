@@ -81,44 +81,117 @@ def login():
         return jsonify({'success': False, 'message': '모든 정보를 입력해주세요.'})
 
     conn = get_db()
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT * FROM users WHERE login_id = %s", (login_id,))
-        user = cursor.fetchone()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM users WHERE login_id = %s", (login_id,))
+            user = cursor.fetchone()
 
-    if not user:
-        return jsonify({'success': False, 'message': '없는 아이디입니다.'})
-    elif not check_password_hash(user['password_hash'], password):
-        return jsonify({'success': False, 'message': '비밀번호를 확인해주세요.'})
-    else:
-        session['user_id'] = user['user_id']
-        session['uname'] = user['uname']
-        session['is_admin'] = user['is_admin']
+        if not user:
+            return jsonify({'success': False, 'message': '없는 아이디입니다.'})
+        elif not check_password_hash(user['password_hash'], password):
+            return jsonify({'success': False, 'message': '비밀번호를 확인해주세요.'})
+        else:
+            session['user_id'] = user['user_id']
+            session['uname'] = user['uname']
+            session['is_admin'] = user['is_admin']
 
-        if 'pending_traits' in session:
-            traits = session.pop('pending_traits')
-            with get_db() as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute("""
-                        INSERT INTO user_answers (user_id, trait_1, trait_2, trait_3, trait_4, trait_5)
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                    """, (user['user_id'], traits['trait_1'], traits['trait_2'], traits['trait_3'], traits['trait_4'], traits['trait_5']))
-                    conn.commit()
+            if 'pending_traits' in session:
+                traits = session.pop('pending_traits')
+                with get_db() as conn:
+                    with conn.cursor() as cursor:
+                        cursor.execute("""
+                            INSERT INTO user_answers (user_id, trait_1, trait_2, trait_3, trait_4, trait_5)
+                            VALUES (%s, %s, %s, %s, %s, %s)
+                        """, (user['user_id'], traits['trait_1'], traits['trait_2'], traits['trait_3'], traits['trait_4'], traits['trait_5']))
+                        conn.commit()
 
-        redirect_url = '/admin' if user['is_admin'] else '/'
-        return jsonify({'success': True, 'redirect': redirect_url})
+            # next 파라미터 확인 - 로그인 후 원래 페이지로 돌아가기
+            next_url = request.args.get('next')
+            if next_url:
+                redirect_url = next_url
+            elif user['is_admin']:
+                redirect_url = '/admin/consultations'
+            else:
+                redirect_url = '/'
+                
+            return jsonify({'success': True, 'redirect': redirect_url})
+    finally:
+        conn.close()
 
-# 이미지 불러오기 라우트 (중복 제거됨)
+# 이미지 불러오기 라우트 (수정된 버전)
 @app.route('/image/<int:image_id>')
 def get_image(image_id):
     conn = get_db()
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT image_data, mimetype FROM site_images WHERE image_id = %s", (image_id,))
-        row = cursor.fetchone()
-        if row and row['image_data']:
-            return send_file(
-                io.BytesIO(row['image_data']),
-                mimetype=row['mimetype'] or 'image/jpeg'
-            )
+    try:
+        with conn.cursor() as cursor:
+            # 먼저 image_id로 직접 조회 시도
+            cursor.execute("SELECT image_data FROM site_images WHERE image_id = %s", (image_id,))
+            row = cursor.fetchone()
+            
+            if row and row['image_data']:
+                return send_file(
+                    io.BytesIO(row['image_data']),
+                    mimetype='image/jpeg'
+                )
+            
+            # 직접 조회 실패 시, trainer_id로 간주하여 해당 트레이너의 첫 번째 이미지 조회
+            cursor.execute("""
+                SELECT image_data 
+                FROM site_images 
+                WHERE name LIKE %s 
+                ORDER BY uploaded_at ASC 
+                LIMIT 1
+            """, (f"trainer{image_id}_%",))
+            row = cursor.fetchone()
+            
+            if row and row['image_data']:
+                return send_file(
+                    io.BytesIO(row['image_data']),
+                    mimetype='image/jpeg'
+                )
+    finally:
+        conn.close()
+    
+    return 'Image Not Found', 404
+
+# 트레이너 전용 이미지 라우트 추가
+@app.route('/trainer-image/<int:trainer_id>')
+def get_trainer_image(trainer_id):
+    """트레이너 ID로 해당 트레이너의 첫 번째 이미지를 가져오는 전용 라우트"""
+    conn = get_db()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT image_data 
+                FROM site_images 
+                WHERE name LIKE %s 
+                ORDER BY uploaded_at ASC 
+                LIMIT 1
+            """, (f"trainer{trainer_id}_%",))
+            row = cursor.fetchone()
+            
+            if row and row['image_data']:
+                return send_file(
+                    io.BytesIO(row['image_data']),
+                    mimetype='image/jpeg'
+                )
+    finally:
+        conn.close()
+    
+    # 기본 이미지 반환 (image_id=48 또는 1)
+    conn = get_db()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT image_data FROM site_images WHERE image_id = %s", (48,))
+            row = cursor.fetchone()
+            if row and row['image_data']:
+                return send_file(
+                    io.BytesIO(row['image_data']),
+                    mimetype='image/jpeg'
+                )
+    finally:
+        conn.close()
+        
     return 'Image Not Found', 404
 
 # 회원가입 라우트
@@ -184,60 +257,7 @@ def trainer_profile(trainer_id):
         trainer = cursor.fetchone()
     return render_template('trainer_profile.html', trainer=trainer)
 
-# 관리자 전용 예약 조회 페이지
-@app.route('/admin/consultations')
-def admin_consultations():
-    if 'user_id' not in session or session.get('is_admin') != 1:
-        return redirect('/')
-
-    conn = get_db()
-    with conn.cursor() as cursor:
-        cursor.execute("""
-            SELECT 
-                r.reservation_id, r.user_id, r.trainer_id, r.reservation_date,
-                r.reservation_time, r.num_people, r.status, r.created_at,
-                t.tname AS trainer_name, t.image_id,
-                u.uname AS user_name, u.phone AS user_phone
-            FROM reservations r
-            JOIN trainers t ON r.trainer_id = t.trainer_id
-            JOIN users u ON r.user_id = u.user_id
-            ORDER BY r.created_at DESC
-        """)
-        reservations = cursor.fetchall()
-
-        for r in reservations:
-            if hasattr(r['reservation_time'], 'total_seconds'):
-                sec = int(r['reservation_time'].total_seconds())
-                r['reservation_time_str'] = f"{sec//3600:02}:{(sec%3600)//60:02}"
-            else:
-                r['reservation_time_str'] = str(r['reservation_time'])[:5]
-
-        cursor.execute("SELECT COUNT(*) as total FROM reservations")
-        total_count = cursor.fetchone()['total']
-
-        cursor.execute("SELECT COUNT(*) as today FROM reservations WHERE reservation_date = CURDATE()")
-        today_count = cursor.fetchone()['today']
-
-        cursor.execute("""
-            SELECT COUNT(*) as month 
-            FROM reservations 
-            WHERE reservation_date >= DATE_FORMAT(NOW(), '%Y-%m-01')
-        """)
-        month_count = cursor.fetchone()['month']
-
-        cursor.execute("SELECT COUNT(*) as active FROM trainers WHERE is_hidden = 0")
-        active_trainers = cursor.fetchone()['active']
-
-        cursor.execute("SELECT trainer_id, tname FROM trainers WHERE is_hidden = 0")
-        trainers = cursor.fetchall()
-
-    return render_template('admin_consultations.html',
-                           reservations=reservations,
-                           total_count=total_count,
-                           today_count=today_count,
-                           month_count=month_count,
-                           active_trainers=active_trainers,
-                           trainers=trainers)
+# ★ 기존 admin_consultations 라우트 제거 (consultation_routes.py에서 처리)
 
 # 블루프린트 등록
 app.register_blueprint(profile_bp)

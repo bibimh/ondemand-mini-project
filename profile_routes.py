@@ -1,11 +1,10 @@
 # profile_routes.py
 
-from flask import Blueprint, render_template, request, abort
+from flask import Blueprint, render_template, request, abort, redirect, url_for
 from db.db import conn
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 import base64
-from flask import redirect, url_for
 
 profile_bp = Blueprint('profile', __name__)
 
@@ -24,7 +23,7 @@ def profile(trainer_id):
             SELECT image_data FROM site_images
             WHERE name LIKE %s
             ORDER BY uploaded_at ASC
-        """, (f"%트레이너{trainer_id}%",))
+        """, (f"trainer{trainer_id}%",))
         image_rows = cursor.fetchall()
 
     image_sources = [
@@ -45,7 +44,6 @@ def profile(trainer_id):
             """, (user_id, trainer_id, new_rating, new_text))
             conn.commit()
 
-            # 중복 방지를 위해 GET으로 리다이렉트
             return redirect(url_for('profile.profile', trainer_id=trainer_id))
         
         cursor.execute("""
@@ -60,35 +58,60 @@ def profile(trainer_id):
     review_count = len(reviews)
     avg_rating = round(sum(r["rating"] for r in reviews) / review_count, 1) if review_count > 0 else 0.0
 
-    # === 지난달 통계 계산 (gender만 출력, 연령대는 임시 미사용) ===
-    today = datetime.today()
-    first_day_this_month = today.replace(day=1)
-    last_month_end = first_day_this_month - timedelta(days=1)
-    last_month_start = last_month_end.replace(day=1)
-
+    # === 지난달 성별 통계 ===
+    gender_counter = defaultdict(int)
+    total_count = 0
     with conn.cursor() as cursor:
         cursor.execute("""
             SELECT u.gender, COUNT(*) as count
             FROM member_regist m
             JOIN users u ON m.user_id = u.user_id
             WHERE m.trainer_id = %s
-              AND m.regist_date BETWEEN %s AND %s
+              AND m.regist_date BETWEEN DATE_FORMAT(CURDATE() - INTERVAL 1 MONTH, '%%Y-%%m-01')
+              AND LAST_DAY(CURDATE() - INTERVAL 1 MONTH)
             GROUP BY u.gender
-        """, (trainer_id, last_month_start.date(), last_month_end.date()))
-        rows = cursor.fetchall()
+        """, (trainer_id,))
+        gender_rows = cursor.fetchall()
+        for row in gender_rows:
+            gender_counter[row['gender']] += row['count']
+            total_count += row['count']
 
-    gender_counter = defaultdict(int)
-    age_counter = defaultdict(int)  # 빈 dict 유지
-    total_count = 0
+    # === 지난달 연령대 통계 ===
+    age_groups = ['10대', '20대', '30대', '40대', '50대+']
+    age_counter = {group: 0 for group in age_groups}
 
-    for row in rows:
-        gender = row['gender']
-        count = row['count']
-        gender_counter[gender] += count
-        total_count += count
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            SELECT FLOOR(TIMESTAMPDIFF(YEAR, u.birthday, CURDATE()) / 10) * 10 AS age_group, COUNT(*) AS count
+            FROM member_regist m
+            JOIN users u ON m.user_id = u.user_id
+            WHERE m.trainer_id = %s
+              AND m.regist_date BETWEEN DATE_FORMAT(CURDATE() - INTERVAL 1 MONTH, '%%Y-%%m-01')
+              AND LAST_DAY(CURDATE() - INTERVAL 1 MONTH)
+            GROUP BY age_group
+            ORDER BY age_group
+        """, (trainer_id,))
+        age_rows = cursor.fetchall()
 
-    gender_data = {k: round(v / total_count * 100, 1) for k, v in gender_counter.items()} if total_count else {}
-    age_data = {k: round(v / total_count * 100, 1) for k, v in age_counter.items()} if total_count else {}
+        for row in age_rows:
+            decade = row['age_group']
+            count = row['count']
+            if decade < 10:
+                continue
+            elif decade >= 50:
+                age_counter['50대+'] += count
+            else:
+                label = f"{decade}대"
+                if label in age_counter:
+                    age_counter[label] += count
+
+    gender_data = {
+        k: round(v / total_count * 100, 1) for k, v in gender_counter.items()
+    } if total_count else {}
+
+    age_data = {
+        k: round(v / total_count * 100, 1) for k, v in age_counter.items()
+    } if total_count else {k: 0.0 for k in age_groups}
 
     return render_template(
         'profile.html', 

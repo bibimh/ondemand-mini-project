@@ -1,0 +1,111 @@
+/* 컨테이너 */
+.container {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 1220px;
+    height: 821px;
+    background-color: #fff;
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    padding: 30px;
+}
+
+.left-wrapper {
+    position: relative;
+    margin-top: -170px;
+    margin-left: 80px;  /* ← 원하는 만큼 조정 (예시) */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+
+
+/* 왼쪽 박스 */
+.left-box {
+    width: 400px;
+    height: 600px;
+    position: relative;
+}
+
+.image-link img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+
+
+/* 텍스트들을 이미지 아래에 배치 */
+.main-title {
+    position: absolute;
+    top: 620px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 480px;
+    font-size: 55px;
+    font-weight: 600;
+    color: #000;
+    line-height: 55px;
+    text-align: center;
+    word-break: keep-all;
+    white-space: normal;
+}
+
+.fitpick {
+    position: absolute;
+    top: 725px;
+    left: calc(50% + 50px);
+    transform: translateX(-50%);
+    font-size: 45px;
+    font-weight: 600;
+    color: #000;
+    text-align: center;
+}
+
+.arrow {
+    position: absolute;
+    top: 730px;
+    left: calc(50% + 125px);
+    width: 76px;
+    height: 50px;
+    object-fit: contain;
+}
+
+/* 오른쪽 박스 */
+.right-box {
+    display: grid;
+    grid-template-columns: repeat(3, 180px);
+    grid-template-rows: repeat(3, 240px);
+    gap: 20px 30px;
+}
+
+.right-box img {
+    width: 180px;
+    height: 240px;
+    object-fit: cover;
+    transition: 0.3s;
+}
+
+a {
+    text-decoration: none;
+    color: black;
+}
+
+header {
+    position: absolute !important;
+    top: 15px !important;
+    right: 30px !important;
+    display: flex !important;
+    gap: 20px !important;
+    z-index: 10 !important;
+}
+
+header a {
+    font-size: 24px !important;
+    font-weight: 600 !important;
+    color: black !important;
+    text-decoration: none !important;
+}

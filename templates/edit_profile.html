@@ -4,43 +4,55 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/background.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/edit_profile.css') }}">
     <title>프로필 수정</title>
+    {% if error_message %}
+    <script>
+        alert("{{ error_message }}");
+    </script>
+    {% endif %}
+
 </head>
 <body>
-    <h2>{{ trainer.tname }} 트레이너 프로필 수정</h2>
-    <form method="POST" enctype="multipart/form-data">
-        <label>이름:</label><br>
-        <input type="text" name="tname" value="{{ trainer.tname }}"><br><br>
+    <div class="container">
+        <h2>{{ trainer.tname }} 트레이너 프로필 수정</h2>
+        <form method="POST" enctype="multipart/form-data">
+            <label>이름:</label><br>
+            <input type="text" name="tname" value="{{ trainer.tname }}"><br><br>
 
-        <label>소개글:</label><br>
-        <textarea name="introduce" rows="5" cols="60">{{ trainer.introduce }}</textarea><br><br>
+            <label>소개글:</label><br>
+            <textarea name="introduce" rows="5" cols="60">{{ trainer.introduce }}</textarea><br><br>
 
-        <label>성별:</label><br>
-        <select name="trait_5">
-            <option value="남성" {% if trainer.trait_5 == '남성' %}selected{% endif %}>남성</option>
-            <option value="여성" {% if trainer.trait_5 == '여성' %}selected{% endif %}>여성</option>
-        </select><br><br>
+            <label>성별:</label><br>
+            <select name="trait_5">
+                <option value="남성" {% if trainer.gender == 'M' %}selected{% endif %}>남성</option>
+                <option value="여성" {% if trainer.gender == 'F' %}selected{% endif %}>여성</option>
+            </select>
+            <br><br>
 
-        <label>MBTI:</label><br>
-        <input type="text" name="mbti" maxlength="4" value="{{ trainer.trait_1 ~ trainer.trait_2 ~ trainer.trait_3 ~ trainer.trait_4 }}"><br><br>
+            <label>MBTI:</label><br>
+            <input type="text" name="mbti" maxlength="4" value="{{ trainer.trait_1 ~ trainer.trait_2 ~ trainer.trait_3 ~ trainer.trait_4 }}"><br><br>
 
-        <label>기존 이미지:</label><br>
-        {% for idx, img in image_sources %}
-            <div>
-                <img src="{{ img.src }}" style="max-height: 100px;">
-                <label>
-                    <input type="checkbox" name="delete_images" value="{{ img.name }}"> 삭제
-                </label>
+            <label>기존 이미지:</label>
+            <div class="image-delete-grid">
+                {% for img in image_sources %}
+                    <div class="image-box">
+                        <img src="{{ img.src }}" alt="기존 이미지" class="preview-img">
+                        <label class="delete-label">
+                            <input type="checkbox" name="delete_images" value="{{ img.name }}">
+                            삭제
+                        </label>
+                    </div>
+                {% endfor %}
             </div>
-        {% endfor %}
 
-        <br>
-        <label>새 이미지 추가:</label><br>
-        <input type="file" name="new_images" multiple accept="image/*"><br><br>
-        <button type="submit">수정 완료</button>
-    </form>
 
-        <button type="submit">수정 완료</button>
-    </form>
+            <br>
+            <label>새 이미지 추가:</label><br>
+            <input type="file" name="new_images" multiple accept="image/*"><br><br>
+            <button type="submit">수정 완료</button>
+        </form>
+    </div>
 </body>
 </html>

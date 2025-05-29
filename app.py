@@ -3,6 +3,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask import send_file
 from profile_routes import profile_bp
 from profile_edit_routes import edit_profile_bp
+from mainpage_route import mainpage_bp
+from consultation_routes import consultation_bp
 import io
 import pymysql
 
@@ -206,6 +208,9 @@ def get_image(image_id):
 
 app.register_blueprint(profile_bp)
 app.register_blueprint(edit_profile_bp)
+#app.register_blueprint(mainpage_bp)
+app.register_blueprint(mainpage_bp, url_prefix='/main')
+app.register_blueprint(consultation_bp)
 
 if __name__ == '__main__':
     app.run(debug=True)

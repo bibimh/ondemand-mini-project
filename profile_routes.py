@@ -62,8 +62,9 @@ def profile(trainer_id):
             conn.commit()
             return redirect(url_for('profile.profile', trainer_id=trainer_id))
         
+        # 리뷰 조회 쿼리
         cursor.execute("""
-            SELECT r.rating, r.comment, r.created_at, u.login_id
+            SELECT r.review_id, r.user_id, r.rating, r.comment, r.created_at, u.login_id
             FROM reviews r JOIN users u ON r.user_id = u.user_id
             WHERE r.trainer_id = %s
             ORDER BY r.created_at DESC
@@ -73,6 +74,16 @@ def profile(trainer_id):
     # 리뷰 통계 계산
     review_count = len(reviews)
     avg_rating = round(sum(r["rating"] for r in reviews) / review_count, 1) if review_count > 0 else 0.0
+
+    # === 이 유저가 등록한 트레이너인지 확인 (템플릿 전달용)
+    is_registered = False
+    if user_id:
+        with conn.cursor() as cursor:
+            cursor.execute("""
+                SELECT COUNT(*) AS cnt FROM member_regist
+                WHERE user_id = %s AND trainer_id = %s
+            """, (user_id, trainer_id))
+            is_registered = cursor.fetchone()['cnt'] > 0
 
     # === 지난달 성별 통계 ===
     gender_counter = defaultdict(int)
@@ -139,5 +150,20 @@ def profile(trainer_id):
         gender_data=gender_data,
         age_data=age_data,
         image_sources=image_sources,
-        is_admin=True
+        is_admin=session.get('is_admin') == 1,
+        is_registered=is_registered
     )
+
+@profile_bp.route('/profile/<int:trainer_id>/delete_review', methods=['POST'])
+def delete_review(trainer_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    review_id = request.form.get('review_id')
+    user_id = session['user_id']
+
+    with conn.cursor() as cursor:
+        cursor.execute("DELETE FROM reviews WHERE review_id = %s AND user_id = %s", (review_id, user_id))
+        conn.commit()
+
+    return redirect(url_for('profile.profile', trainer_id=trainer_id))

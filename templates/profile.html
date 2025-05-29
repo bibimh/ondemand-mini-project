@@ -10,246 +10,218 @@
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <div class="trainer-section">
-            <div class="trainer-left">
-                <div class="image-carousel">
-                    <div class="carousel-track">
-                        {% for src in image_sources %}
-                            <img class="carousel-img" src="{{ src }}">
-                        {% endfor %}
-                    </div>
-                    {% if image_sources|length > 1 %}
-                        <button class="carousel-btn left" onclick="prevImage()">&#10094;</button>
-                        <button class="carousel-btn right" onclick="nextImage()">&#10095;</button>
-                    {% endif %}
+<div class="container">
+    <!-- 트레이너 정보 -->
+    <div class="trainer-section">
+        <div class="trainer-left">
+            <div class="image-carousel">
+                <div class="carousel-track">
+                    {% for src in image_sources %}
+                        <img class="carousel-img" src="{{ src }}">
+                    {% endfor %}
                 </div>
-            </div>
-            <br>
-            <div class="trainer-right">
-                <h2>{{ trainer.tname }} 트레이너</h2>
-                <div class="trainer-intro">{{ trainer.introduce | safe }}</div>
-                <br>
-                <form action="/consult" method="get">
-                    <input type="hidden" name="trainer_id" value="{{ trainer_id }}">
-                    <button class="consult-btn">💬 상담 신청하기</button>
-                </form>
-
-                {% if is_admin %}
-                    <br>
-                    <a href="{{ url_for('edit_profile.edit_profile', trainer_id=trainer_id) }}">
-                        <button class="edit-btn">프로필 수정하기</button>
-                    </a>                    
-                    <br><br>
+                {% if image_sources|length > 1 %}
+                    <button class="carousel-btn left" onclick="prevImage()">&#10094;</button>
+                    <button class="carousel-btn right" onclick="nextImage()">&#10095;</button>
                 {% endif %}
             </div>
         </div>
+        <br>
+        <div class="trainer-right">
+            <h2>{{ trainer.tname }} 트레이너</h2>
+            <div class="trainer-intro">{{ trainer.introduce | safe }}</div>
+            <br>
+            <form action="/consult" method="get">
+                <input type="hidden" name="trainer_id" value="{{ trainer_id }}">
+                <button class="consult-btn">💬 상담 신청하기</button>
+            </form>
 
-        <br><hr>
-
-        <section class="stats-section">
-            <h3>지난 달 실제 등록 회원</h3>
-            <div class="chart-container">
-                <div style="width: 240px; height: 240px;">
-                    <canvas id="genderChart"></canvas>
-                </div>
-                <div style="width: 320px; height: 240px;">
-                    <canvas id="ageChart"></canvas>
-                </div>
-            </div>
-        </section>
-
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script>
-            let current = 0;
-            const track = document.querySelector('.carousel-track');
-            const images = document.querySelectorAll('.carousel-img');
-            const total = images.length;
-
-            const btnLeft = document.querySelector('.carousel-btn.left');
-            const btnRight = document.querySelector('.carousel-btn.right');
-
-            function updateSlide() {
-                const container = document.querySelector('.image-carousel');
-                const track = document.querySelector('.carousel-track');
-                const images = document.querySelectorAll('.carousel-img');
-                const containerWidth = container.offsetWidth;
-
-                track.style.width = `${containerWidth * total}px`;
-                track.style.transform = `translateX(-${current * containerWidth}px)`;
-
-                images.forEach(img => {
-                    img.style.width = `${containerWidth}px`;  // 이미지 크기 통일
-                    img.style.flex = '0 0 auto';              // 축소 방지
-                });
-
-                if (btnLeft) btnLeft.disabled = current === 0;
-                if (btnRight) btnRight.disabled = current === total - 1;
-            }
-
-            function prevImage() {
-                if (current > 0) {
-                    current--;
-                    updateSlide();
-                }
-            }
-
-            function nextImage() {
-                if (current < total - 1) {
-                    current++;
-                    updateSlide();
-                }
-            }
-
-            window.addEventListener('load', updateSlide);
-            window.addEventListener('resize', updateSlide);
-        </script>
-
-
-        <script>
-            const genderData = JSON.parse('{{ gender_data | tojson | safe }}');
-            const ageData = JSON.parse('{{ age_data | tojson | safe }}');
-
-            // 성별 도넛형 그래프
-            new Chart(document.getElementById('genderChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['남', '여'],
-                    datasets: [{
-                        data: [genderData['M'] || 0, genderData['F'] || 0],
-                        backgroundColor: ['#4BC0C0', '#FF6384'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '60%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                font: { size: 14 }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.parsed}%`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-            // 연령대별 막대 그래프
-            new Chart(document.getElementById('ageChart'), {
-                type: 'bar',
-                data: {
-                    labels: Object.keys(ageData),  // ['10대', '20대', ...]
-                    datasets: [{
-                        data: Object.values(ageData),
-                        backgroundColor: '#36A2EB',
-                        barThickness: 25
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.raw;  // ← 퍼센트 값 (숫자)
-                                    return `${value}%`;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: { font: { size: 13 } }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            max: 100,
-                            ticks: {
-                                stepSize: 20,
-                                callback: function(value) {
-                                    return value + '%';  // ✅ y축에 % 표시
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-
-        </script>
-        
-        <br><hr>
-
-        <!-- 리뷰 통계 -->
-        <section class="review-summary">
-            <p>
-                후기 <span class="summary-star">★</span>
-                {{ avg_rating }} (총 {{ review_count }}개)
-            </p>
-            <!-- 추후 정렬 기능 구현 시 -->
-            <!-- 필터 버튼 자리 예약 -->
-        </section>
-
-        <!-- 리뷰 작성 폼 -->
-        <section class="review-form">
-            <h4>리뷰 작성하기</h4>
-
-            {% if not session['user_id'] %}
-                <p>✋ 로그인 후 작성 가능합니다.</p>
-
-            {% else %}
-                {% set is_registered = false %}
-                {% for reg in registrations %}
-                    {% if reg.trainer_id == trainer_id and reg.user_id == session['user_id'] %}
-                        {% set is_registered = true %}
-                    {% endif %}
-                {% endfor %}
-
-                {% if is_registered %}
-                    <form method="POST">
-                        <label>별점:
-                            <select name="rating">
-                                {% for i in range(5, 0, -1) %}
-                                    <option value="{{ i }}">{{ i }}점</option>
-                                {% endfor %}
-                            </select>
-                        </label><br><br>
-                        <label>후기:</label><br>
-                        <textarea name="review" rows="4" cols="50" required></textarea><br><br>
-                        <button type="submit" class="submit-btn">리뷰 등록</button>
-                    </form>
-                {% else %}
-                    <p>😢 해당 트레이너는 회원님의 담당 트레이너가 아닙니다. 리뷰를 작성할 수 없습니다.</p>
-                {% endif %}
+            {% if is_admin %}
+                <br>
+                <a href="{{ url_for('edit_profile.edit_profile', trainer_id=trainer_id) }}">
+                    <button class="edit-btn">프로필 수정하기</button>
+                </a>
+                <br><br>
             {% endif %}
-        </section>
-
-        <!-- 리뷰 리스트 -->
-        <section class="review-list">
-            {% for review in reviews %}
-                <div class="review-card">
-                    <p class="review-meta">
-                        {{ review.login_id[:-3] + '***' }} | {{ review.created_at.strftime('%Y-%m-%d') }}
-                    </p>
-                    <p class="review-stars">
-                        <span class="star-yellow">{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}</span>
-                        <span class="review-score">{{ review.rating }}</span>
-                    </p>
-                    <p>{{ review.comment | replace('\n', '<br>') | safe }}</p>
-                </div>
-            {% endfor %}
-        </section>
+        </div>
     </div>
+
+    <br><hr>
+
+    <!-- 통계 -->
+    <section class="stats-section">
+        <h3>지난 달 실제 등록 회원</h3>
+        <div class="chart-container">
+            <div style="width: 240px; height: 240px;">
+                <canvas id="genderChart"></canvas>
+            </div>
+            <div style="width: 320px; height: 240px;">
+                <canvas id="ageChart"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <br><hr>
+
+    <!-- 리뷰 통계 -->
+    <section class="review-summary">
+        <p>
+            후기 <span class="summary-star">★</span>
+            {{ avg_rating }} (총 {{ review_count }}개)
+        </p>
+    </section>
+
+    <!-- 리뷰 작성 -->
+    <section class="review-form">
+        <h4>리뷰 작성하기</h4>
+        {% if not session['user_id'] %}
+            <p>✋ 로그인 후 작성 가능합니다.</p>
+        {% else %}
+            {% if is_registered %}
+                <form method="POST">
+                    <label>별점:
+                        <select name="rating">
+                            {% for i in range(5, 0, -1) %}
+                                <option value="{{ i }}">{{ i }}점</option>
+                            {% endfor %}
+                        </select>
+                    </label><br><br>
+                    <label>후기:</label><br>
+                    <textarea name="review" rows="4" cols="50" required></textarea><br><br>
+                    <button type="submit" class="submit-btn">리뷰 등록</button>
+                </form>
+            {% else %}
+                <p>😢 해당 트레이너는 회원님의 담당 트레이너가 아닙니다. 리뷰를 작성할 수 없습니다.</p>
+            {% endif %}
+        {% endif %}
+    </section>
+
+    <!-- 리뷰 목록 -->
+    <section class="review-list">
+        {% for review in reviews %}
+            <div class="review-card">
+                <p class="review-meta">
+                    {{ review.login_id[:-3] + '***' }} | {{ review.created_at.strftime('%Y-%m-%d') }}
+                </p>
+                <p class="review-stars">
+                    <span class="star-yellow">{{ '★' * review.rating }}{{ '☆' * (5 - review.rating) }}</span>
+                    <span class="review-score">{{ review.rating }}</span>
+                </p>
+                <p>{{ review.comment | replace('\n', '<br>') | safe }}</p>
+
+                {% if session['user_id'] == review.user_id %}
+                    <form method="POST" action="{{ url_for('profile.delete_review', trainer_id=trainer_id) }}">
+                        <input type="hidden" name="review_id" value="{{ review.review_id }}">
+                        <button type="submit" class="delete-btn">리뷰 삭제</button>
+                    </form>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const genderData = JSON.parse('{{ gender_data | tojson | safe }}');
+    const ageData = JSON.parse('{{ age_data | tojson | safe }}');
+
+    new Chart(document.getElementById('genderChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['남', '여'],
+            datasets: [{
+                data: [genderData['M'] || 0, genderData['F'] || 0],
+                backgroundColor: ['#4BC0C0', '#FF6384'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.parsed}%`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('ageChart'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(ageData),
+            datasets: [{
+                data: Object.values(ageData),
+                backgroundColor: '#36A2EB',
+                barThickness: 25
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.raw}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        stepSize: 20,
+                        callback: value => value + '%'
+                    }
+                }
+            }
+        }
+    });
+
+    // 이미지 슬라이드 관련 (생략 가능)
+    let current = 0;
+    const track = document.querySelector('.carousel-track');
+    const images = document.querySelectorAll('.carousel-img');
+    const total = images.length;
+
+    function updateSlide() {
+        const container = document.querySelector('.image-carousel');
+        const containerWidth = container.offsetWidth;
+        track.style.width = `${containerWidth * total}px`;
+        track.style.transform = `translateX(-${current * containerWidth}px)`;
+        images.forEach(img => {
+            img.style.width = `${containerWidth}px`;
+            img.style.flex = '0 0 auto';
+        });
+    }
+
+    function prevImage() {
+        if (current > 0) {
+            current--;
+            updateSlide();
+        }
+    }
+
+    function nextImage() {
+        if (current < total - 1) {
+            current++;
+            updateSlide();
+        }
+    }
+
+    window.addEventListener('load', updateSlide);
+    window.addEventListener('resize', updateSlide);
+</script>
 </body>
 </html>
+

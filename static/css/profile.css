@@ -127,21 +127,25 @@
 
 .image-carousel {
     position: relative;
-    width: 100%;
-    max-width: 500px;
-    height: 500px;
     overflow: hidden;
+    width: 360px;
+    height: 480px; 
+    margin: 0 auto;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0,0,0,0.1);
 }
 
 .carousel-img {
-    width: 100%;
     height: 100%;
+    width: 100%;
     object-fit: cover;
-    position: absolute;
-    top: 0;
-    left: 0;
-    transition: opacity 0.5s ease-in-out;
-    border-radius: 0px;
+    flex: 0 0 100%;
+}
+
+.carousel-track {
+    display: flex;
+    height: 100%;
+    transition: transform 0.5s ease-in-out;
 }
 
 .hidden {
@@ -166,4 +170,36 @@
 }
 .carousel-btn.right {
     right: 10px;
+}
+
+.carousel-btn:disabled {
+    opacity: 0.3;
+    cursor: default;
+    pointer-events: none;
+}
+
+.review-card p.hidden-msg {
+    color: gray;
+    font-style: italic;
+    padding: 10px;
+    background: #f9f9f9;
+    border-left: 4px solid #ccc;
+}
+
+.sort-box {
+    display: inline-block;
+    padding: 5px;
+}
+
+.sort-label {
+    margin-right: 8px;
+    font-weight: 600;
+    color: #555;
+}
+
+.sort-select {
+    padding: 6px 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-family: 'Noto Sans KR', sans-serif;
 }

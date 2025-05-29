@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ trainer.tname }} 트레이너 예약 내역 - Fit Pick</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #E1D8D2 0%, #CFC6C4 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(207, 198, 196, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .trainer-info {
+            padding: 20px 30px;
+            background: linear-gradient(135deg, #E1D8D2 0%, #E0D9D5 100%);
+            border-bottom: 1px solid #DACFCB;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .trainer-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #CFC6C4;
+            box-shadow: 0 4px 12px rgba(207, 198, 196, 0.3);
+        }
+
+        .trainer-details {
+            flex: 1;
+        }
+
+        .trainer-name {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #CFC6C4;
+            margin-bottom: 5px;
+        }
+
+        .trainer-subtitle {
+            color: #D4CDC9;
+            font-size: 1em;
+        }
+
+        .stats-section {
+            padding: 30px;
+            background: linear-gradient(135deg, #E1D8D2 0%, #E0D9D5 100%);
+            border-bottom: 1px solid #DACFCB;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #DAD2CF;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: 700;
+            color: #CFC6C4;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #D4CDC9;
+            font-weight: 500;
+        }
+
+        .table-section {
+            padding: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #CFC6C4;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #E0D9D5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #DACFCB 0%, #DAD2CF 100%);
+        }
+
+        th {
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #CFC6C4;
+            border-bottom: 2px solid #E0D9D5;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #E0D9D5;
+            color: #333;
+        }
+
+        tbody tr:hover {
+            background: linear-gradient(135deg, #E1D8D2 0%, #E0D9D5 100%);
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .user-phone {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .date-time {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .date {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #D4CDC9;
+            font-size: 1.1em;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin: 20px 30px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #DACFCB 0%, #DAD2CF 100%);
+            color: #CFC6C4;
+            text-decoration: none;
+            border-radius: 6px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .trainer-info {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .stats-section {
+                padding: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .table-section {
+                padding: 20px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th,
+            td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/profile/{{ trainer.trainer_id }}" class="back-btn">← 트레이너 프로필로 돌아가기</a>
+        
+        <div class="header">
+            <h1>🗓️ 예약 내역 관리</h1>
+            <p>{{ trainer.tname }} 트레이너의 상담 예약 현황을 확인하세요</p>
+        </div>
+
+        <div class="trainer-info">
+            <img src="/image/{{ trainer.image_id if trainer.image_id else '1' }}" 
+                 alt="{{ trainer.tname }}" class="trainer-avatar">
+            <div class="trainer-details">
+                <div class="trainer-name">{{ trainer.tname }} 트레이너</div>
+                <div class="trainer-subtitle">전문 퍼스널 트레이너</div>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_count }}</div>
+                    <div class="stat-label">전체 예약</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ today_count }}</div>
+                    <div class="stat-label">오늘 예약</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ this_week_count }}</div>
+                    <div class="stat-label">이번주 예약</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-section">
+            <h2 class="section-title">📋 예약 목록</h2>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>예약번호</th>
+                            <th>예약자 정보</th>
+                            <th>예약 날짜/시간</th>
+                            <th>인원</th>
+                            <th>신청일</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if reservations %}
+                            {% for reservation in reservations %}
+                            <tr>
+                                <td>#{{ reservation.reservation_id }}</td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-name">{{ reservation.user_name }}</div>
+                                        <div class="user-phone">{{ reservation.user_phone if reservation.user_phone else '-' }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="date-time">
+                                        <div class="date">{{ reservation.reservation_date.strftime('%Y-%m-%d') }}</div>
+                                        <div class="time">{{ reservation.reservation_time_str if reservation.reservation_time_str else reservation.reservation_time }}</div>
+                                    </div>
+                                </td>
+                                <td>{{ reservation.num_people }}명</td>
+                                <td>{{ reservation.created_at.strftime('%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="no-data">
+                                    📝 아직 예약이 없습니다.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

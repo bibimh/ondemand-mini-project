@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>Fit Pick 메인페이지</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main_background.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/basic.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- header -->
+        <header>
+            <a href="/login" target="_blank">로그인</a>
+            <a href="/center" target="_blank">센터 바로가기</a>
+        </header>
+
+        <!-- 왼쪽 그룹 박스 -->
+        <div class="left-wrapper">
+            <div class="left-box">
+                <a href="/tpage1" target="_blank" class="image-link">
+                    <img src="{{ url_for('static', filename='images/trainer1.jpg') }}" alt="트레이너1">
+                </a>
+                <a href="/fitpick" target="_blank" class="main-title">나를 위한 선택,<br>트레이너 매칭하기</a>
+                <a href="/fitpick" target="_blank" class="fitpick">FitPick</a>
+                <img src="{{ url_for('static', filename='images/arrow.png') }}" alt="화살표" class="arrow">
+            </div>
+        </div>
+
+        <!-- 오른쪽 박스 -->
+        <div class="right-box">
+            {% for i in range(2,11) %}
+            <a href="/tpage{{ i }}" target="_blank">
+                <img src="{{ url_for('static', filename='images/trainer' ~ i ~ '.jpg') }}" alt="트레이너{{ i }}">
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 왼쪽 큰 이미지 hover
+        const img = document.querySelector('.image-link img');
+        if (img) {
+            const originalSrc = img.src;
+            const hoverSrc = originalSrc.replace('.jpg', '_hover.jpg');
+            img.addEventListener('mouseenter', () => img.src = hoverSrc);
+            img.addEventListener('mouseleave', () => img.src = originalSrc);
+        }
+
+        // 오른쪽 9개 trainer 이미지 hover
+        document.querySelectorAll('.right-box img').forEach(function(trainerImg) {
+            const src = trainerImg.src;
+            if (src.includes('.jpg') && !src.includes('_hover')) {
+                const hoverSrc = src.replace('.jpg', '_hover.jpg');
+                trainerImg.addEventListener('mouseenter', function() {
+                    trainerImg.src = hoverSrc;
+                });
+                trainerImg.addEventListener('mouseleave', function() {
+                    trainerImg.src = src;
+                });
+            }
+        });
+    });
+    </script>
+
+
+</body>
+</html>

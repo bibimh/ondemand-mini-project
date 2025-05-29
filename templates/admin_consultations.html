@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>전체 예약 내역 관리 - Fit Pick Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: linear-gradient(135deg, #E1D8D2 0%, #CFC6C4 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(207, 198, 196, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .stats-section {
+            padding: 30px;
+            background: linear-gradient(135deg, #E1D8D2 0%, #E0D9D5 100%);
+            border-bottom: 1px solid #DACFCB;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #DAD2CF;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: 700;
+            color: #CFC6C4;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #D4CDC9;
+            font-weight: 500;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-weight: 500;
+            color: #CFC6C4;
+            white-space: nowrap;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 8px 12px;
+            border: 2px solid #E0D9D5;
+            border-radius: 6px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 14px;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: #D4CDC9;
+        }
+
+        .table-section {
+            padding: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #CFC6C4;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 10px;
+            border: 1px solid #E0D9D5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #DACFCB 0%, #DAD2CF 100%);
+        }
+
+        th {
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #CFC6C4;
+            border-bottom: 2px solid #E0D9D5;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #E0D9D5;
+            color: #333;
+        }
+
+        tbody tr:hover {
+            background: linear-gradient(135deg, #E1D8D2 0%, #E0D9D5 100%);
+        }
+
+        .trainer-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .trainer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #E0D9D5;
+        }
+
+        .trainer-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .trainer-name {
+            font-weight: 600;
+            color: #CFC6C4;
+        }
+
+        .trainer-specialty {
+            font-size: 12px;
+            color: #D4CDC9;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .user-phone {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .date-time {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .date {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #D4CDC9;
+            font-size: 1.1em;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin: 20px 30px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #DACFCB 0%, #DAD2CF 100%);
+            color: #CFC6C4;
+            text-decoration: none;
+            border-radius: 6px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
+            color: white;
+        }
+
+        .debug-info {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .stats-section,
+            .table-section {
+                padding: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                justify-content: space-between;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th,
+            td {
+                padding: 8px;
+            }
+
+            .trainer-info {
+                flex-direction: column;
+                gap: 5px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-btn">← 메인 페이지로 돌아가기</a>
+        
+        <div class="header">
+            <h1>🏋️‍♂️ 전체 예약 내역 관리</h1>
+            <p>모든 트레이너의 상담 예약 현황을 확인하고 관리하세요</p>
+        </div>
+
+        <div class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number">{{ total_count }}</div>
+                    <div class="stat-label">전체 예약</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ today_count }}</div>
+                    <div class="stat-label">오늘 예약</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ month_count }}</div>
+                    <div class="stat-label">이번달 예약</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ active_trainers }}</div>
+                    <div class="stat-label">활성 트레이너</div>
+                </div>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label for="trainerFilter">트레이너:</label>
+                    <select id="trainerFilter" onchange="filterReservations()">
+                        <option value="">전체</option>
+                        {% for trainer in trainers %}
+                        <option value="{{ trainer.trainer_id }}">{{ trainer.tname }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="dateFilter">날짜:</label>
+                    <input type="date" id="dateFilter" onchange="filterReservations()">
+                </div>
+                <div class="filter-group">
+                    <button type="button" onclick="clearFilters()" style="padding: 8px 12px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">필터 초기화</button>
+                </div>
+            </div>
+
+            <!-- 디버깅 정보 표시 (개발 단계에서만) -->
+            <div id="debugInfo" class="debug-info" style="display: none;">
+                <strong>디버깅 정보:</strong><br>
+                <div id="debugContent"></div>
+            </div>
+        </div>
+
+        <div class="table-section">
+            <h2 class="section-title">📋 예약 목록</h2>
+            <div class="table-wrapper">
+                <table id="reservationsTable">
+                    <thead>
+                        <tr>
+                            <th>예약번호</th>
+                            <th>트레이너</th>
+                            <th>예약자 정보</th>
+                            <th>예약 날짜/시간</th>
+                            <th>인원</th>
+                            <th>신청일</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if reservations %}
+                            {% for reservation in reservations %}
+                            <tr data-trainer-id="{{ reservation.trainer_id if reservation.trainer_id is not none else 'unknown' }}" 
+                                data-reservation-date="{{ reservation.reservation_date.strftime('%Y-%m-%d') }}" 
+                                data-trainer-name="{{ reservation.trainer_name if reservation.trainer_name else 'Unknown' }}">
+                                <td>#{{ reservation.reservation_id }}</td>
+                                <td>
+                                    <div class="trainer-info">
+                                        <img src="/image/{{ reservation.image_id if reservation.image_id else '1' }}" 
+                                             alt="{{ reservation.trainer_name }}" class="trainer-avatar">
+                                        <div class="trainer-details">
+                                            <div class="trainer-name">{{ reservation.trainer_name }}</div>
+                                            <div class="trainer-specialty">전문 트레이너</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="user-info">
+                                        <div class="user-name">{{ reservation.user_name }}</div>
+                                        <div class="user-phone">{{ reservation.user_phone if reservation.user_phone else '-' }}</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="date-time">
+                                        <div class="date">{{ reservation.reservation_date.strftime('%Y-%m-%d') }}</div>
+                                        <div class="time">{{ reservation.reservation_time_str if reservation.reservation_time_str else reservation.reservation_time }}</div>
+                                    </div>
+                                </td>
+                                <td>{{ reservation.num_people }}명</td>
+                                <td>{{ reservation.created_at.strftime('%m-%d %H:%M') }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="no-data">
+                                    📝 아직 예약이 없습니다.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let allRows = [];
+        let debugMode = true; // 디버깅 모드 (배포 시 false로 변경)
+
+        function debugLog(message) {
+            if (debugMode) {
+                console.log(message);
+                const debugContent = document.getElementById('debugContent');
+                if (debugContent) {
+                    debugContent.innerHTML += message + '<br>';
+                }
+            }
+        }
+
+        function showDebugInfo(show = true) {
+            const debugInfo = document.getElementById('debugInfo');
+            if (debugInfo) {
+                debugInfo.style.display = show ? 'block' : 'none';
+            }
+        }
+
+        function clearDebugInfo() {
+            const debugContent = document.getElementById('debugContent');
+            if (debugContent) {
+                debugContent.innerHTML = '';
+            }
+        }
+
+        function filterReservations() {
+            clearDebugInfo();
+            
+            const trainerFilter = document.getElementById('trainerFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+            
+            debugLog('=== 필터링 시작 ===');
+            debugLog(`트레이너 필터: "${trainerFilter}" (타입: ${typeof trainerFilter})`);
+            debugLog(`날짜 필터: "${dateFilter}" (타입: ${typeof dateFilter})`);
+            
+            if (debugMode) {
+                showDebugInfo(true);
+            }
+
+            let visibleCount = 0;
+            let totalRows = 0;
+
+            allRows.forEach(function(row, index) {
+                // 데이터가 없는 경우 (no-data 행) 건너뛰기
+                if (row.querySelector('.no-data')) {
+                    debugLog('no-data 행 건너뛰기');
+                    return;
+                }
+
+                totalRows++;
+                let show = true;
+                
+                const rowTrainerId = row.getAttribute('data-trainer-id');
+                const rowDate = row.getAttribute('data-reservation-date');
+                const rowTrainerName = row.getAttribute('data-trainer-name');
+                
+                debugLog(`\n--- 행 ${index + 1} 검사 ---`);
+                debugLog(`트레이너ID: "${rowTrainerId}" (타입: ${typeof rowTrainerId})`);
+                debugLog(`트레이너명: "${rowTrainerName}"`);
+                debugLog(`예약날짜: "${rowDate}"`);
+                
+                // 트레이너 필터링
+                if (trainerFilter && trainerFilter !== '') {
+                    // 정확한 비교를 위해 둘 다 문자열로 변환
+                    const filterStr = String(trainerFilter).trim();
+                    const rowStr = String(rowTrainerId).trim();
+                    
+                    debugLog(`필터 비교: "${filterStr}" === "${rowStr}"`);
+                    
+                    if (filterStr !== rowStr) {
+                        show = false;
+                        debugLog(`❌ 트레이너 필터로 숨김 (${filterStr} !== ${rowStr})`);
+                    } else {
+                        debugLog(`✅ 트레이너 필터 통과`);
+                    }
+                }
+                
+                // 날짜 필터링
+                if (show && dateFilter && dateFilter !== '') {
+                    const filterDate = String(dateFilter).trim();
+                    const rowDateStr = String(rowDate).trim();
+                    
+                    debugLog(`날짜 비교: "${filterDate}" === "${rowDateStr}"`);
+                    
+                    if (filterDate !== rowDateStr) {
+                        show = false;
+                        debugLog(`❌ 날짜 필터로 숨김 (${filterDate} !== ${rowDateStr})`);
+                    } else {
+                        debugLog(`✅ 날짜 필터 통과`);
+                    }
+                }
+                
+                // 행 표시/숨김 처리
+                row.style.display = show ? '' : 'none';
+                
+                if (show) {
+                    visibleCount++;
+                    debugLog(`🟢 최종 결과: 표시됨`);
+                } else {
+                    debugLog(`🔴 최종 결과: 숨겨짐`);
+                }
+            });
+
+            debugLog(`\n=== 필터링 완료 ===`);
+            debugLog(`전체 행: ${totalRows}개`);
+            debugLog(`표시된 행: ${visibleCount}개`);
+            debugLog(`숨겨진 행: ${totalRows - visibleCount}개`);
+
+            // 결과가 없을 때 메시지 표시
+            if (visibleCount === 0 && totalRows > 0) {
+                debugLog('⚠️ 필터 조건에 맞는 예약이 없습니다.');
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('trainerFilter').value = '';
+            document.getElementById('dateFilter').value = '';
+            
+            // 모든 행 표시
+            allRows.forEach(function(row) {
+                if (!row.querySelector('.no-data')) {
+                    row.style.display = '';
+                }
+            });
+            
+            clearDebugInfo();
+            debugLog('필터가 초기화되었습니다.');
+        }
+
+        // 페이지 로드시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== 페이지 로드 완료 ===');
+            
+            // 모든 테이블 행 수집
+            allRows = Array.from(document.querySelectorAll('#reservationsTable tbody tr'));
+            console.log(`총 ${allRows.length}개 행 발견`);
+            
+            // 각 행의 데이터 속성 검사
+            console.log('=== 모든 행 데이터 확인 ===');
+            allRows.forEach(function(row, index) {
+                if (!row.querySelector('.no-data')) {
+                    const trainerId = row.getAttribute('data-trainer-id');
+                    const trainerName = row.getAttribute('data-trainer-name');
+                    const date = row.getAttribute('data-reservation-date');
+                    
+                    console.log(`행 ${index + 1}:`);
+                    console.log(`  - 트레이너ID: "${trainerId}" (타입: ${typeof trainerId})`);
+                    console.log(`  - 트레이너명: "${trainerName}"`);
+                    console.log(`  - 예약날짜: "${date}"`);
+                    
+                    // HTML 소스도 확인
+                    console.log(`  - HTML: ${row.outerHTML.substring(0, 200)}...`);
+                }
+            });
+            
+            // 트레이너 선택 옵션 확인
+            const trainerSelect = document.getElementById('trainerFilter');
+            console.log('=== 트레이너 선택 옵션 확인 ===');
+            Array.from(trainerSelect.options).forEach(function(option, index) {
+                if (option.value !== '') {
+                    console.log(`옵션 ${index}: value="${option.value}" text="${option.text}"`);
+                }
+            });
+            
+            // 백엔드 데이터 확인 (Flask에서 전달된 데이터)
+            console.log('=== 백엔드 데이터 확인 ===');
+            {% if reservations %}
+            console.log('예약 데이터 (처음 3개):');
+            {% for reservation in reservations[:3] %}
+            var reservationData = {};
+            reservationData.reservation_id = {{ reservation.reservation_id }};
+            reservationData.trainer_id = {{ reservation.trainer_id if reservation.trainer_id is not none else 'null' }};
+            reservationData.trainer_name = "{{ reservation.trainer_name }}";
+            reservationData.user_name = "{{ reservation.user_name }}";
+            reservationData.reservation_date = "{{ reservation.reservation_date.strftime('%Y-%m-%d') }}";
+            console.log(reservationData);
+            {% endfor %}
+            {% else %}
+            console.log('예약 데이터가 없습니다.');
+            {% endif %}
+            
+            // 날짜 입력 제한 설정
+            const today = new Date();
+            const maxDate = new Date();
+            maxDate.setDate(today.getDate() + 30);
+            
+            const dateInput = document.getElementById('dateFilter');
+            dateInput.max = maxDate.toISOString().split('T')[0];
+            
+            console.log('초기화 완료');
+            
+            // 디버깅 정보 숨기기 (초기에는)
+            if (!debugMode) {
+                showDebugInfo(false);
+            }
+        });
+
+        // 디버깅 모드 토글 (개발용)
+        function toggleDebugMode() {
+            debugMode = !debugMode;
+            showDebugInfo(debugMode);
+            console.log(`디버깅 모드: ${debugMode ? 'ON' : 'OFF'}`);
+        }
+
+        // 키보드 단축키로 디버깅 모드 토글 (Ctrl + D)
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'd') {
+                e.preventDefault();
+                toggleDebugMode();
+            }
+        });
+    </script>
+</body>
+</html>

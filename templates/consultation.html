@@ -213,7 +213,7 @@ def admin_consultations():
                         r.status,
                         r.created_at,
                         t.tname as trainer_name,
-                        t.image_id,
+                        t.image_url,
                         u.uname as user_name,
                         u.phone as user_phone
                     FROM reservations r

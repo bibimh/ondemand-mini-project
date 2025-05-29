@@ -1,6 +1,6 @@
 # profile_edit_routes.py
 
-from flask import Blueprint, render_template, request, redirect, url_for, abort
+from flask import Blueprint, session, render_template, request, redirect, url_for, abort
 from db.db import conn
 from datetime import datetime
 import base64
@@ -119,3 +119,17 @@ def edit_profile(trainer_id):
         trainer_id=trainer_id,
         image_sources=image_sources
     )
+
+@edit_profile_bp.route('/profile/<int:trainer_id>/delete', methods=['GET'])
+def delete_profile(trainer_id):
+    if session.get('is_admin') != 1:
+        abort(403)
+
+    with conn.cursor() as cursor:
+        # 트레이너 삭제
+        cursor.execute("DELETE FROM trainers WHERE trainer_id = %s", (trainer_id,))
+        # 이미지도 삭제
+        cursor.execute("DELETE FROM site_images WHERE name LIKE %s", (f"trainer{trainer_id}%",))
+        conn.commit()
+
+    return redirect(url_for('info_page'))  # 삭제 후 info 페이지로 이동

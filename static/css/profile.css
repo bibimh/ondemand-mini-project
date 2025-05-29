@@ -2,46 +2,6 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR&display=swap');
 
-/* 전체 레이아웃 중앙 정렬 */
-body {
-    font-family: 'Noto Sans KR', sans-serif;
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-}
-
-/* 배경 이미지 + 블러 효과 */
-body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: url("../images/background.jpg") no-repeat center center fixed;
-    background-size: cover;
-    background-position: center;
-    opacity: 0.9;
-    z-index: -1;
-}
-
-/* 중앙 흰색 박스 */
-.container {
-    position: relative;
-    z-index: 1;
-    width: 85%;
-    max-width: 2500px;
-    height: 70vh;
-    background-color: white;
-    border-radius: 0px;
-    padding: 40px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
-    overflow-y: auto;
-}
-
 .trainer-section {
     display: flex;
     gap: 40px;
@@ -101,12 +61,14 @@ body::before {
     background-color: #CFC6C4;
 }
 
+/* 후기 제목에 나오는 별만 노란색 */
 .summary-star {
     color: #ff9800;
     font-weight: bold;
     font-size: 20px;
 }
 
+/* 평균 평점 숫자는 검정색 */
 .summary-score {
     color: black;
     font-weight: bold;
@@ -136,12 +98,14 @@ body::before {
     margin-bottom: 5px;
 }
 
+/* 후기 카드 내 별점도 노란색 */
 .review-stars {
     color: #ff9800;
     font-weight: bold;
     margin-bottom: 8px;
 }
 
+/* 후기 리스트: 숫자는 검정색 */
 .review-score {
     color: black;
     font-weight: bold;
@@ -165,7 +129,7 @@ body::before {
     position: relative;
     overflow: hidden;
     width: 360px;
-    height: 480px;
+    height: 480px; 
     margin: 0 auto;
     border-radius: 8px;
     box-shadow: 0 0 8px rgba(0,0,0,0.1);
@@ -204,7 +168,6 @@ body::before {
 .carousel-btn.left {
     left: 10px;
 }
-
 .carousel-btn.right {
     right: 10px;
 }
@@ -213,4 +176,30 @@ body::before {
     opacity: 0.3;
     cursor: default;
     pointer-events: none;
+}
+
+.review-card p.hidden-msg {
+    color: gray;
+    font-style: italic;
+    padding: 10px;
+    background: #f9f9f9;
+    border-left: 4px solid #ccc;
+}
+
+.sort-box {
+    display: inline-block;
+    padding: 5px;
+}
+
+.sort-label {
+    margin-right: 8px;
+    font-weight: 600;
+    color: #555;
+}
+
+.sort-select {
+    padding: 6px 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-family: 'Noto Sans KR', sans-serif;
 }

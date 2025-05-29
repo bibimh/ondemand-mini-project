@@ -16,7 +16,7 @@ def consultation_page(trainer_id):
     """상담 페이지 - 트레이너 프로필에서 상담신청하기 버튼 클릭시"""
     # 로그인 확인 - 로그인 안했으면 로그인 페이지로
     if 'user_id' not in session:
-        return redirect(url_for('login', next=request.url))
+        return redirect(url_for('auth.login', next=request.url))
     
     # 활성화된 트레이너만 조회 (is_hidden = 0)
     trainer = get_active_trainer_by_id(trainer_id)
@@ -129,7 +129,7 @@ def create_consultation_api():
 def my_consultations():
     """내 상담 신청 목록 조회"""
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
     
     try:
         from db.db import get_db
@@ -156,7 +156,7 @@ def admin_consultations():
     """관리자 전용 - 상담 예약 목록 보기"""
     # 관리자 권한 확인
     if 'user_id' not in session or not session.get('is_admin'):
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
     
     try:
         from db.db import get_db
@@ -192,15 +192,13 @@ def admin_consultations():
                 month_count = cursor.fetchone()['month']
                 print(f"   이번달 예약: {month_count}건")
                 
-                # 3. 트레이너 목록 (디버깅 강화)
+                # 3. 트레이너 목록
                 print("🏋️‍♂️ 트레이너 목록 조회 중...")
-                cursor.execute("SELECT trainer_id, tname FROM trainers WHERE is_hidden = 0 ORDER BY trainer_id")
+                cursor.execute("SELECT trainer_id, tname FROM trainers WHERE is_hidden = 0")
                 trainers = cursor.fetchall()
                 print(f"   조회된 트레이너: {len(trainers)}명")
-                for trainer in trainers:
-                    print(f"     - ID: {trainer['trainer_id']}, 이름: {trainer['tname']}")
                 
-                # 4. 예약 목록 조회 (필드명 확인)
+                # 4. 예약 목록 조회 (단순화)
                 print("📅 예약 목록 조회 중...")
                 cursor.execute("""
                     SELECT 
@@ -212,10 +210,10 @@ def admin_consultations():
                         r.num_people,
                         r.status,
                         r.created_at,
-                        t.tname as trainer_name,
-                        t.image_id,
-                        u.uname as user_name,
-                        u.phone as user_phone
+                        t.tname,
+                        t.image_url,
+                        u.uname,
+                        u.phone
                     FROM reservations r
                     JOIN trainers t ON r.trainer_id = t.trainer_id
                     JOIN users u ON r.user_id = u.user_id
@@ -228,39 +226,16 @@ def admin_consultations():
                 for reservation in reservations:
                     if isinstance(reservation['reservation_time'], type(reservation['reservation_time'])):
                         # timedelta를 HH:MM 형식으로 변환
-                        if hasattr(reservation['reservation_time'], 'total_seconds'):
-                            total_seconds = int(reservation['reservation_time'].total_seconds())
-                            hours = total_seconds // 3600
-                            minutes = (total_seconds % 3600) // 60
-                            reservation['reservation_time_str'] = f"{hours:02d}:{minutes:02d}"
-                        else:
-                            reservation['reservation_time_str'] = str(reservation['reservation_time'])[:5]
+                        total_seconds = int(reservation['reservation_time'].total_seconds())
+                        hours = total_seconds // 3600
+                        minutes = (total_seconds % 3600) // 60
+                        reservation['reservation_time_str'] = f"{hours:02d}:{minutes:02d}"
                     else:
-                        reservation['reservation_time_str'] = str(reservation['reservation_time'])[:5]
+                        reservation['reservation_time_str'] = str(reservation['reservation_time'])
                 
-                # 각 예약 정보 출력 (디버깅용 - 상세)
-                print("📋 예약 데이터 상세:")
-                for i, res in enumerate(reservations[:5]):  # 처음 5개만
-                    print(f"   예약 {i+1}:")
-                    print(f"     - ID: {res['reservation_id']}")
-                    print(f"     - 트레이너 ID: {res['trainer_id']} (타입: {type(res['trainer_id'])})")
-                    print(f"     - 트레이너명: {res['trainer_name']}")
-                    print(f"     - 사용자명: {res['user_name']}")
-                    print(f"     - 예약날짜: {res['reservation_date']}")
-                    print(f"     - 예약시간: {res.get('reservation_time_str', 'N/A')}")
-                    print(f"     - 생성일시: {res['created_at']}")
-                
-                # trainer_id가 None인지 확인
-                none_trainer_ids = [res for res in reservations if res['trainer_id'] is None]
-                if none_trainer_ids:
-                    print(f"❌ 경고: trainer_id가 None인 예약이 {len(none_trainer_ids)}개 있습니다!")
-                    for res in none_trainer_ids[:3]:
-                        print(f"   - 예약 ID: {res['reservation_id']}, 트레이너명: {res['trainer_name']}")
-                
-                # trainer_id 값들 확인
-                trainer_ids = [res['trainer_id'] for res in reservations]
-                unique_trainer_ids = list(set(trainer_ids))
-                print(f"📊 고유한 trainer_id 값들: {unique_trainer_ids}")
+                # 각 예약 정보 출력 (디버깅용)
+                for i, res in enumerate(reservations[:3]):  # 처음 3개만
+                    print(f"   예약 {i+1}: #{res['reservation_id']} - {res['tname']} - {res['uname']} - {res.get('reservation_time_str', 'N/A')}")
         
         print("🎉 모든 데이터 조회 완료, 템플릿 렌더링 중...")
         
@@ -282,68 +257,3 @@ def admin_consultations():
         traceback.print_exc()
         
         return f"예약 목록을 불러올 수 없습니다.<br>오류: {e}", 500
-
-@consultation_bp.route('/trainer/<int:trainer_id>/reservations')
-def trainer_reservations(trainer_id):
-    """특정 트레이너의 예약 내역 조회 (나중에 관리자 체크 추가 예정)"""
-    
-    # 트레이너 정보 조회
-    trainer = get_active_trainer_by_id(trainer_id)
-    if not trainer:
-        return "해당 트레이너를 찾을 수 없습니다.", 404
-    
-    try:
-        from db.db import get_db
-        
-        with get_db() as conn:
-            with conn.cursor() as cursor:
-                # 해당 트레이너의 예약 목록 조회 (최신순)
-                cursor.execute("""
-                    SELECT r.*, u.uname as user_name, u.phone as user_phone
-                    FROM reservations r
-                    JOIN users u ON r.user_id = u.user_id
-                    WHERE r.trainer_id = %s
-                    ORDER BY r.created_at DESC
-                """, (trainer_id,))
-                reservations = cursor.fetchall()
-                
-                # 시간 포맷 변환
-                for reservation in reservations:
-                    if hasattr(reservation['reservation_time'], 'total_seconds'):
-                        total_seconds = int(reservation['reservation_time'].total_seconds())
-                        hours = total_seconds // 3600
-                        minutes = (total_seconds % 3600) // 60
-                        reservation['reservation_time_str'] = f"{hours:02d}:{minutes:02d}"
-                    else:
-                        reservation['reservation_time_str'] = str(reservation['reservation_time'])[:5]
-                
-                # 통계 정보
-                cursor.execute("SELECT COUNT(*) as total FROM reservations WHERE trainer_id = %s", (trainer_id,))
-                total_count = cursor.fetchone()['total']
-                
-                cursor.execute("""
-                    SELECT COUNT(*) as today 
-                    FROM reservations 
-                    WHERE trainer_id = %s AND reservation_date = CURDATE()
-                """, (trainer_id,))
-                today_count = cursor.fetchone()['today']
-                
-                cursor.execute("""
-                    SELECT COUNT(*) as week 
-                    FROM reservations 
-                    WHERE trainer_id = %s 
-                    AND reservation_date >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)
-                    AND reservation_date < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY)
-                """, (trainer_id,))
-                this_week_count = cursor.fetchone()['week']
-        
-        return render_template('trainer_reservations.html',
-                             trainer=trainer,
-                             reservations=reservations,
-                             total_count=total_count,
-                             today_count=today_count,
-                             this_week_count=this_week_count)
-        
-    except Exception as e:
-        print(f"트레이너 예약 내역 조회 오류: {e}")
-        return "예약 내역을 불러올 수 없습니다.", 500

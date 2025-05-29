@@ -28,4 +28,4 @@ def insert_image(file_path, name, description):
     conn.close()
  
 # 이미지 등록 
-# insert_image('static/images/default.jpg', '기본', '기본 이미지')
+insert_image('static/images/default.jpg', '기본', '기본 이미지')

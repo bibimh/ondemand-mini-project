@@ -1,6 +1,4 @@
-# profile_edit_routes.py
-
-from flask import Blueprint, session, render_template, request, redirect, url_for, abort
+from flask import Blueprint, render_template, request, redirect, url_for, abort
 from db.db import get_db
 from datetime import datetime
 import base64
@@ -22,10 +20,8 @@ def edit_profile(trainer_id):
             gender_code = 'M' if trait_5 == '남' else 'F'
 
             VALID_MBTIS = {
-                "ISTJ", "ISFJ", "INFJ", "INTJ",
-                "ISTP", "ISFP", "INFP", "INTP",
-                "ESTP", "ESFP", "ENFP", "ENTP",
-                "ESTJ", "ESFJ", "ENFJ", "ENTJ"
+                "ISTJ", "ISFJ", "INFJ", "INTJ", "ISTP", "ISFP", "INFP", "INTP",
+                "ESTP", "ESFP", "ENFP", "ENTP", "ESTJ", "ESFJ", "ENFJ", "ENTJ"
             }
 
             if mbti not in VALID_MBTIS:
@@ -57,18 +53,10 @@ def edit_profile(trainer_id):
                     UPDATE trainers SET
                         tname = %s,
                         introduce = %s,
-                        trait_1 = %s,
-                        trait_2 = %s,
-                        trait_3 = %s,
-                        trait_4 = %s,
-                        trait_5 = %s,
-                        gender = %s
+                        trait_1 = %s, trait_2 = %s, trait_3 = %s, trait_4 = %s,
+                        trait_5 = %s, gender = %s
                     WHERE trainer_id = %s
-                """, (
-                    tname, introduce,
-                    mbti[0], mbti[1], mbti[2], mbti[3],
-                    trait_5, gender_code, trainer_id
-                ))
+                """, (tname, introduce, mbti[0], mbti[1], mbti[2], mbti[3], trait_5, gender_code, trainer_id))
 
                 delete_images = request.form.getlist('delete_images')
                 for name in delete_images:
@@ -91,6 +79,7 @@ def edit_profile(trainer_id):
 
             return redirect(url_for('profile.profile', trainer_id=trainer_id))
 
+        # GET 요청
         with conn.cursor() as cursor:
             cursor.execute("SELECT * FROM trainers WHERE trainer_id = %s", (trainer_id,))
             trainer = cursor.fetchone()
@@ -112,17 +101,3 @@ def edit_profile(trainer_id):
             trainer_id=trainer_id,
             image_sources=image_sources
         )
-
-@edit_profile_bp.route('/profile/<int:trainer_id>/delete', methods=['GET'])
-def delete_profile(trainer_id):
-    if session.get('is_admin') != 1:
-        abort(403)
-
-    with get_db() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute("DELETE FROM trainers WHERE trainer_id = %s", (trainer_id,))
-            cursor.execute("DELETE FROM site_images WHERE name LIKE %s", (f"trainer{trainer_id}%",))
-            conn.commit()
-
-    return redirect(url_for('info_page'))
-

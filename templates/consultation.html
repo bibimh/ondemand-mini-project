@@ -1,349 +1,890 @@
-# routes/consultation_routes.py - 김철환 담당 상담 신청 시스템
-from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
-from datetime import datetime, timedelta
-import sys
-import os
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상담 신청 - Fit Pick</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* 메인 페이지 스타일 적용 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
 
-# 프로젝트 루트 디렉토리를 sys.path에 추가
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        body {
+            background: url("/image/1") center center / cover no-repeat fixed;
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0 4vw;
+        }
 
-from db.db import get_trainer_by_id, get_active_trainer_by_id, get_reserved_times, create_reservation
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: url("/image/1") no-repeat center center fixed;
+            background-size: cover;
+            background-position: center;
+            opacity: 70%;
+            z-index: -1;
+        }
 
-consultation_bp = Blueprint('consultation', __name__)
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 85%;
+            max-width: 1000px;
+            height: 80vh;
+            background-color: white;
+            border-radius: 0px;
+            padding: 40px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
+            overflow-y: auto;
+        }
 
-@consultation_bp.route('/consultation/<int:trainer_id>')
-def consultation_page(trainer_id):
-    """상담 페이지 - 트레이너 프로필에서 상담신청하기 버튼 클릭시"""
-    # 로그인 확인 - 로그인 안했으면 로그인 페이지로
-    if 'user_id' not in session:
-        return redirect(url_for('auth.login', next=request.url))
-    
-    # 활성화된 트레이너만 조회 (is_hidden = 0)
-    trainer = get_active_trainer_by_id(trainer_id)
-    if not trainer:
-        return "해당 트레이너를 찾을 수 없거나 현재 상담 신청을 받지 않고 있습니다.", 404
-    
-    # 오늘 날짜와 최대 예약 가능 날짜 (30일 후)
-    today = datetime.now().strftime('%Y-%m-%d')
-    max_date = (datetime.now() + timedelta(days=30)).strftime('%Y-%m-%d')
-    
-    # 템플릿 파일명을 consultation.html로 변경
-    return render_template('consultation.html', 
-                         trainer=trainer, 
-                         today=today, 
-                         max_date=max_date)
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
-@consultation_bp.route('/api/reserved-times/<int:trainer_id>/<date>')
-def get_reserved_times_api(trainer_id, date):
-    """특정 날짜의 예약된 시간 조회 API - 선택된 시간 다른사람이 선택불가하게"""
-    try:
-        reserved_times = get_reserved_times(trainer_id, date)
-        # 시간을 문자열로 변환 (HH:MM 형식)
-        reserved_times_str = [str(time)[:5] for time in reserved_times]
-        return jsonify({
-            'success': True,
-            'reserved_times': reserved_times_str
-        })
-    except Exception as e:
-        print(f"예약된 시간 조회 오류: {e}")
-        return jsonify({
-            'success': False,
-            'message': '예약된 시간을 조회할 수 없습니다.'
-        }), 500
+        .header h1 {
+            color: #CFC6C4;
+            font-size: 2em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
 
-@consultation_bp.route('/api/create-consultation', methods=['POST'])
-def create_consultation_api():
-    """상담 신청 생성 API - 최종 상담 신청 확정"""
-    # 로그인 확인
-    if 'user_id' not in session:
-        return jsonify({
-            'success': False,
-            'message': '로그인이 필요합니다.'
-        }), 401
-    
-    try:
-        data = request.get_json()
-        user_id = session['user_id']
-        trainer_id = data.get('trainer_id')
-        consultation_date = data.get('consultation_date')
-        consultation_time = data.get('consultation_time')
-        num_people = data.get('num_people', 1)
-        
-        # 입력값 검증
-        if not all([trainer_id, consultation_date, consultation_time]):
-            return jsonify({
-                'success': False,
-                'message': '필수 정보가 누락되었습니다.'
-            }), 400
-        
-        # 날짜 형식 검증
-        try:
-            datetime.strptime(consultation_date, '%Y-%m-%d')
-            datetime.strptime(consultation_time, '%H:%M')
-        except ValueError:
-            return jsonify({
-                'success': False,
-                'message': '날짜 또는 시간 형식이 올바르지 않습니다.'
-            }), 400
-        
-        # 과거 날짜 예약 방지
-        consultation_datetime = datetime.strptime(f"{consultation_date} {consultation_time}", '%Y-%m-%d %H:%M')
-        if consultation_datetime <= datetime.now():
-            return jsonify({
-                'success': False,
-                'message': '과거 시간으로는 신청할 수 없습니다.'
-            }), 400
-        
-        # 이미 예약된 시간인지 재확인 (동시 예약 방지)
-        reserved_times = get_reserved_times(trainer_id, consultation_date)
-        reserved_times_str = [str(time)[:5] for time in reserved_times]
-        if consultation_time in reserved_times_str:
-            return jsonify({
-                'success': False,
-                'message': '이미 예약된 시간입니다. 다른 시간을 선택해주세요.'
-            }), 400
-        
-        # 상담 신청 생성
-        consultation_id = create_reservation(
-            user_id=user_id,
-            trainer_id=trainer_id,
-            date=consultation_date,
-            time=consultation_time,
-            num_people=num_people
-        )
-        
-        return jsonify({
-            'success': True,
-            'message': '상담 신청이 완료되었습니다.',
-            'consultation_id': consultation_id
-        })
-        
-    except Exception as e:
-        print(f"상담 신청 생성 오류: {e}")
-        return jsonify({
-            'success': False,
-            'message': '상담 신청 중 오류가 발생했습니다.'
-        }), 500
+        .trainer-info {
+            background: linear-gradient(135deg, #E0D9D5 0%, #DACFCB 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 1px solid #DAD2CF;
+        }
 
-@consultation_bp.route('/my-consultations')
-def my_consultations():
-    """내 상담 신청 목록 조회"""
-    if 'user_id' not in session:
-        return redirect(url_for('auth.login'))
-    
-    try:
-        from db.db import get_db
-        
-        with get_db() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    SELECT r.*, t.tname, t.image_url
-                    FROM reservations r
-                    JOIN trainers t ON r.trainer_id = t.trainer_id
-                    WHERE r.user_id = %s
-                    ORDER BY r.reservation_date DESC, r.reservation_time DESC
-                """, (session['user_id'],))
-                consultations = cursor.fetchall()
-        
-        return render_template('my_consultations.html', consultations=consultations)
-        
-    except Exception as e:
-        print(f"내 상담 목록 조회 오류: {e}")
-        return "상담 목록을 불러올 수 없습니다.", 500
+        .trainer-profile {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
 
-@consultation_bp.route('/admin/consultations')
-def admin_consultations():
-    """관리자 전용 - 상담 예약 목록 보기"""
-    # 관리자 권한 확인
-    if 'user_id' not in session or not session.get('is_admin'):
-        return redirect(url_for('auth.login'))
-    
-    try:
-        from db.db import get_db
-        
-        print("🔍 관리자 페이지 접속 시도...")
-        
-        with get_db() as conn:
-            with conn.cursor() as cursor:
-                print("✅ DB 연결 성공")
-                
-                # 단계별 디버깅
-                print("📊 통계 정보 조회 중...")
-                
-                # 1. 기본 통계
-                cursor.execute("SELECT COUNT(*) as total FROM reservations")
-                total_count = cursor.fetchone()['total']
-                print(f"   전체 예약: {total_count}건")
-                
-                cursor.execute("SELECT COUNT(*) as active FROM trainers WHERE is_hidden = 0")
-                active_trainers = cursor.fetchone()['active']
-                print(f"   활성 트레이너: {active_trainers}명")
-                
-                # 2. 오늘/이번달 통계 (안전한 방식으로)
-                cursor.execute("SELECT COUNT(*) as today FROM reservations WHERE reservation_date = CURDATE()")
-                today_count = cursor.fetchone()['today']
-                print(f"   오늘 예약: {today_count}건")
-                
-                cursor.execute("""
-                    SELECT COUNT(*) as month 
-                    FROM reservations 
-                    WHERE reservation_date >= DATE_FORMAT(NOW(), '%Y-%m-01')
-                """)
-                month_count = cursor.fetchone()['month']
-                print(f"   이번달 예약: {month_count}건")
-                
-                # 3. 트레이너 목록 (디버깅 강화)
-                print("🏋️‍♂️ 트레이너 목록 조회 중...")
-                cursor.execute("SELECT trainer_id, tname FROM trainers WHERE is_hidden = 0 ORDER BY trainer_id")
-                trainers = cursor.fetchall()
-                print(f"   조회된 트레이너: {len(trainers)}명")
-                for trainer in trainers:
-                    print(f"     - ID: {trainer['trainer_id']}, 이름: {trainer['tname']}")
-                
-                # 4. 예약 목록 조회 (필드명 확인)
-                print("📅 예약 목록 조회 중...")
-                cursor.execute("""
-                    SELECT 
-                        r.reservation_id,
-                        r.user_id,
-                        r.trainer_id,
-                        r.reservation_date,
-                        r.reservation_time,
-                        r.num_people,
-                        r.status,
-                        r.created_at,
-                        t.tname as trainer_name,
-                        t.image_url,
-                        u.uname as user_name,
-                        u.phone as user_phone
-                    FROM reservations r
-                    JOIN trainers t ON r.trainer_id = t.trainer_id
-                    JOIN users u ON r.user_id = u.user_id
-                    ORDER BY r.created_at DESC
-                """)
-                reservations = cursor.fetchall()
-                print(f"   조회된 예약: {len(reservations)}건")
-                
-                # 시간 포맷 변환 (timedelta → 문자열)
-                for reservation in reservations:
-                    if isinstance(reservation['reservation_time'], type(reservation['reservation_time'])):
-                        # timedelta를 HH:MM 형식으로 변환
-                        if hasattr(reservation['reservation_time'], 'total_seconds'):
-                            total_seconds = int(reservation['reservation_time'].total_seconds())
-                            hours = total_seconds // 3600
-                            minutes = (total_seconds % 3600) // 60
-                            reservation['reservation_time_str'] = f"{hours:02d}:{minutes:02d}"
-                        else:
-                            reservation['reservation_time_str'] = str(reservation['reservation_time'])[:5]
-                    else:
-                        reservation['reservation_time_str'] = str(reservation['reservation_time'])[:5]
-                
-                # 각 예약 정보 출력 (디버깅용 - 상세)
-                print("📋 예약 데이터 상세:")
-                for i, res in enumerate(reservations[:5]):  # 처음 5개만
-                    print(f"   예약 {i+1}:")
-                    print(f"     - ID: {res['reservation_id']}")
-                    print(f"     - 트레이너 ID: {res['trainer_id']} (타입: {type(res['trainer_id'])})")
-                    print(f"     - 트레이너명: {res['trainer_name']}")
-                    print(f"     - 사용자명: {res['user_name']}")
-                    print(f"     - 예약날짜: {res['reservation_date']}")
-                    print(f"     - 예약시간: {res.get('reservation_time_str', 'N/A')}")
-                    print(f"     - 생성일시: {res['created_at']}")
-                
-                # trainer_id가 None인지 확인
-                none_trainer_ids = [res for res in reservations if res['trainer_id'] is None]
-                if none_trainer_ids:
-                    print(f"❌ 경고: trainer_id가 None인 예약이 {len(none_trainer_ids)}개 있습니다!")
-                    for res in none_trainer_ids[:3]:
-                        print(f"   - 예약 ID: {res['reservation_id']}, 트레이너명: {res['trainer_name']}")
-                
-                # trainer_id 값들 확인
-                trainer_ids = [res['trainer_id'] for res in reservations]
-                unique_trainer_ids = list(set(trainer_ids))
-                print(f"📊 고유한 trainer_id 값들: {unique_trainer_ids}")
-        
-        print("🎉 모든 데이터 조회 완료, 템플릿 렌더링 중...")
-        
-        return render_template('admin_consultations.html',
-                             reservations=reservations,
-                             total_count=total_count,
-                             today_count=today_count,
-                             month_count=month_count,
-                             active_trainers=active_trainers,
-                             trainers=trainers)
-        
-    except Exception as e:
-        print(f"❌ 상세 오류 정보:")
-        print(f"   오류 메시지: {e}")
-        print(f"   오류 타입: {type(e)}")
-        
-        # 스택 트레이스 출력
-        import traceback
-        traceback.print_exc()
-        
-        return f"예약 목록을 불러올 수 없습니다.<br>오류: {e}", 500
+        .trainer-image {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #D4CDC9;
+            box-shadow: 0 4px 12px rgba(207, 198, 196, 0.3);
+        }
 
-@consultation_bp.route('/trainer/<int:trainer_id>/reservations')
-def trainer_reservations(trainer_id):
-    """특정 트레이너의 예약 내역 조회 (나중에 관리자 체크 추가 예정)"""
-    
-    # 트레이너 정보 조회
-    trainer = get_active_trainer_by_id(trainer_id)
-    if not trainer:
-        return "해당 트레이너를 찾을 수 없습니다.", 404
-    
-    try:
-        from db.db import get_db
+        .trainer-details {
+            flex: 1;
+        }
+
+        .trainer-details h2 {
+            color: #CFC6C4;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 1.4em;
+        }
+
+        .trainer-details p {
+            color: #D4CDC9;
+            font-weight: 400;
+            font-size: 1em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #CFC6C4;
+        }
+
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #E0D9D5;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus {
+            outline: none;
+            border-color: #D4CDC9;
+        }
+
+        /* 달력 스타일 */
+        .calendar-container {
+            margin-top: 10px;
+            padding: 20px;
+            border: 2px solid #E0D9D5;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #E1D8D2 0%, #E0D9D5 100%);
+        }
+
+        .calendar {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        .calendar-header h3 {
+            color: #CFC6C4;
+            font-size: 1.5em;
+            font-weight: 600;
+        }
+
+        .calendar-nav {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #CFC6C4;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .calendar-nav:hover {
+            background-color: rgba(207, 198, 196, 0.2);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background-color: #E0D9D5;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .calendar-day-header {
+            background-color: #D4CDC9;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .calendar-day {
+            background-color: white;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+        }
+
+        .calendar-day:hover:not(.disabled):not(.other-month) {
+            background-color: #E1D8D2;
+        }
+
+        .calendar-day.selected {
+            background-color: #D4CDC9;
+            color: white;
+        }
+
+        .calendar-day.disabled {
+            background-color: #f5f5f5;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .calendar-day.other-month {
+            background-color: #f9f9f9;
+            color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .calendar-day.today {
+            border: 2px solid #CFC6C4;
+        }
+
+        .time-slots {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .time-slot {
+            padding: 12px;
+            border: 2px solid #E0D9D5;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            font-weight: 500;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        .time-slot:hover:not(.disabled) {
+            border-color: #D4CDC9;
+            background: linear-gradient(135deg, #E1D8D2 0%, #E0D9D5 100%);
+            transform: translateY(-2px);
+        }
+
+        .time-slot.selected {
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
+            color: white;
+            border-color: #CFC6C4;
+            transform: translateY(-2px);
+        }
+
+        .time-slot.disabled {
+            background: #E0D9D5;
+            color: #CFC6C4;
+            cursor: not-allowed;
+            border-color: #DACFCB;
+        }
+
+        .people-selector {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .people-option {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #E0D9D5;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 400;
+        }
+
+        .people-option:hover {
+            border-color: #D4CDC9;
+            background: linear-gradient(135deg, #E1D8D2 0%, #E0D9D5 100%);
+        }
+
+        .people-option.selected {
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
+            color: white;
+            border-color: #CFC6C4;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            font-family: 'Noto Sans KR', sans-serif;
+            cursor: pointer;
+            transition: transform 0.3s;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(207, 198, 196, 0.4);
+        }
+
+        .submit-btn:disabled {
+            background: #E0D9D5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #DACFCB 0%, #DAD2CF 100%);
+            color: #CFC6C4;
+            text-decoration: none;
+            border-radius: 6px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
+            color: white;
+        }
+
+        .selection-summary {
+            background: linear-gradient(135deg, #E1D8D2 0%, #E0D9D5 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #D4CDC9;
+        }
+
+        .selection-summary h4 {
+            color: #CFC6C4;
+            margin-bottom: 10px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 600;
+        }
+
+        /* 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(207, 198, 196, 0.8);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(207, 198, 196, 0.3);
+            border: 1px solid #E0D9D5;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: #CFC6C4;
+            font-size: 1.5em;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 600;
+        }
+
+        .modal-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #D4CDC9 0%, #CFC6C4 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .modal-btn:hover {
+            background: linear-gradient(135deg, #CFC6C4 0%, #D4CDC9 100%);
+            transform: translateY(-1px);
+        }
+
+        .modal-btn.cancel {
+            background: linear-gradient(135deg, #E0D9D5 0%, #DACFCB 100%);
+            color: #CFC6C4;
+        }
+
+        .modal-btn.cancel:hover {
+            background: linear-gradient(135deg, #DACFCB 0%, #DAD2CF 100%);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+                width: 95%;
+            }
+            
+            .time-slots {
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+                gap: 8px;
+            }
+            
+            .people-selector {
+                flex-wrap: wrap;
+            }
+
+            .calendar-grid {
+                font-size: 0.9em;
+            }
+
+            .calendar-day {
+                padding: 8px;
+                min-height: 35px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/profile/{{ trainer.trainer_id }}" class="back-btn">← 트레이너 프로필로 돌아가기</a>
         
-        with get_db() as conn:
-            with conn.cursor() as cursor:
-                # 해당 트레이너의 예약 목록 조회 (최신순)
-                cursor.execute("""
-                    SELECT r.*, u.uname as user_name, u.phone as user_phone
-                    FROM reservations r
-                    JOIN users u ON r.user_id = u.user_id
-                    WHERE r.trainer_id = %s
-                    ORDER BY r.created_at DESC
-                """, (trainer_id,))
-                reservations = cursor.fetchall()
+        <div class="header">
+            <h1>🏋️‍♂️ 상담 신청</h1>
+        </div>
+
+        <div class="trainer-info">
+            <div class="trainer-profile">
+                <img src="{{ trainer.image_url if trainer.image_url else '/static/images/default-trainer.jpg' }}" 
+                     alt="{{ trainer.tname }} 트레이너" 
+                     class="trainer-image">
+                <div class="trainer-details">
+                    <h2>{{ trainer.tname }} 트레이너</h2>
+                    <p>전문 트레이너</p>
+                </div>
+            </div>
+        </div>
+
+        <form id="consultationForm">
+            <input type="hidden" id="trainerId" value="{{ trainer.trainer_id }}">
+            
+            <div class="form-group">
+                <label for="consultationDate">📅 상담 희망 날짜</label>
+                <div class="calendar-container">
+                    <div class="calendar">
+                        <div class="calendar-header">
+                            <button type="button" class="calendar-nav" id="prevMonth">‹</button>
+                            <h3 id="currentMonth"></h3>
+                            <button type="button" class="calendar-nav" id="nextMonth">›</button>
+                        </div>
+                        <div class="calendar-grid" id="calendarGrid">
+                            <!-- 달력이 JavaScript로 동적 생성됩니다 -->
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" id="selectedDate" name="selectedDate">
+            </div>
+
+            <div class="form-group">
+                <label for="timeSlots">🕐 희망 시간</label>
+                <div class="time-slots" id="timeSlots">
+                    <!-- 시간 슬롯들이 JavaScript로 동적 생성됩니다 -->
+                </div>
+                <input type="hidden" id="selectedTime" name="selectedTime">
+            </div>
+
+            <div class="form-group">
+                <label for="numPeople">👥 인원 수</label>
+                <div class="people-selector" id="peopleSelector">
+                    <div class="people-option selected" data-value="1">1명</div>
+                    <div class="people-option" data-value="2">2명</div>
+                    <div class="people-option" data-value="3">3명</div>
+                    <div class="people-option" data-value="4">4명</div>
+                    <div class="people-option" data-value="5">5명</div>
+                </div>
+                <input type="hidden" id="numPeople" name="numPeople" value="1">
+            </div>
+
+            <div class="selection-summary" id="selectionSummary" style="display: none;">
+                <h4>선택한 상담 정보</h4>
+                <div id="summaryContent"></div>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                💪 상담 신청하기
+            </button>
+        </form>
+    </div>
+
+    <!-- 확인 모달 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h3>🤝 상담 신청 확인</h3>
+            <p id="confirmDetails"></p>
+            <div style="margin-top: 20px;">
+                <button onclick="confirmConsultation()" class="modal-btn">✅ 신청 확정</button>
+                <button onclick="closeModal()" class="modal-btn cancel">❌ 취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 완료 모달 -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <h3>🎉 상담 신청 완료!</h3>
+            <p>
+                <strong>{{ trainer.tname }} 트레이너</strong>와의 상담 신청이<br>
+                성공적으로 완료되었습니다!<br><br>
+                📞 트레이너가 곧 연락드릴 예정입니다.<br>
+                📅 상담 전날 리마인더 문자를 보내드려요.<br><br>
+                <em>건강한 몸만들기, 함께 시작해요! 💪</em>
+            </p>
+            <button onclick="goToMain()" class="modal-btn">메인 페이지로 이동</button>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        let currentDate = new Date();
+        let selectedDateObj = null;
+        let selectedTimeSlot = null;
+        let selectedTime = '';
+        let selectedPeople = 1;
+        let reservedTimes = [];
+
+        const timeSlots = [
+            '09:00', '10:00', '11:00', '12:00', 
+            '13:00', '14:00', '15:00', '16:00', 
+            '17:00', '18:00', '19:00', '20:00'
+        ];
+
+        // 달력 초기화
+        function initCalendar() {
+            updateCalendar();
+            
+            document.getElementById('prevMonth').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                updateCalendar();
+            });
+            
+            document.getElementById('nextMonth').addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                updateCalendar();
+            });
+        }
+
+        // 달력 업데이트
+        function updateCalendar() {
+            const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', 
+                               '7월', '8월', '9월', '10월', '11월', '12월'];
+            
+            document.getElementById('currentMonth').textContent = 
+                currentDate.getFullYear() + '년 ' + monthNames[currentDate.getMonth()];
+            
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+            
+            const calendarGrid = document.getElementById('calendarGrid');
+            calendarGrid.innerHTML = '';
+            
+            // 요일 헤더
+            const dayHeaders = ['일', '월', '화', '수', '목', '금', '토'];
+            dayHeaders.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                calendarGrid.appendChild(header);
+            });
+            
+            // 날짜 생성
+            const today = new Date();
+            const currentDateStr = today.toISOString().split('T')[0];
+            
+            for (let i = 0; i < 42; i++) {
+                const date = new Date(startDate);
+                date.setDate(startDate.getDate() + i);
                 
-                # 시간 포맷 변환
-                for reservation in reservations:
-                    if hasattr(reservation['reservation_time'], 'total_seconds'):
-                        total_seconds = int(reservation['reservation_time'].total_seconds())
-                        hours = total_seconds // 3600
-                        minutes = (total_seconds % 3600) // 60
-                        reservation['reservation_time_str'] = f"{hours:02d}:{minutes:02d}"
-                    else:
-                        reservation['reservation_time_str'] = str(reservation['reservation_time'])[:5]
+                const dayElement = document.createElement('div');
+                dayElement.className = 'calendar-day';
+                dayElement.textContent = date.getDate();
                 
-                # 통계 정보
-                cursor.execute("SELECT COUNT(*) as total FROM reservations WHERE trainer_id = %s", (trainer_id,))
-                total_count = cursor.fetchone()['total']
+                const dateStr = date.toISOString().split('T')[0];
                 
-                cursor.execute("""
-                    SELECT COUNT(*) as today 
-                    FROM reservations 
-                    WHERE trainer_id = %s AND reservation_date = CURDATE()
-                """, (trainer_id,))
-                today_count = cursor.fetchone()['today']
+                // 다른 달의 날짜
+                if (date.getMonth() !== currentDate.getMonth()) {
+                    dayElement.classList.add('other-month');
+                } 
+                // 과거 날짜
+                else if (date < today.setHours(0,0,0,0)) {
+                    dayElement.classList.add('disabled');
+                }
+                // 일요일 비활성화
+                else if (date.getDay() === 0) {
+                    dayElement.classList.add('disabled');
+                }
+                // 선택 가능한 날짜
+                else {
+                    dayElement.addEventListener('click', () => selectDate(date, dayElement));
+                    
+                    // 오늘 날짜 표시
+                    if (dateStr === currentDateStr) {
+                        dayElement.classList.add('today');
+                    }
+                }
                 
-                cursor.execute("""
-                    SELECT COUNT(*) as week 
-                    FROM reservations 
-                    WHERE trainer_id = %s 
-                    AND reservation_date >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)
-                    AND reservation_date < DATE_ADD(DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY), INTERVAL 7 DAY)
-                """, (trainer_id,))
-                this_week_count = cursor.fetchone()['week']
-        
-        return render_template('trainer_reservations.html',
-                             trainer=trainer,
-                             reservations=reservations,
-                             total_count=total_count,
-                             today_count=today_count,
-                             this_week_count=this_week_count)
-        
-    except Exception as e:
-        print(f"트레이너 예약 내역 조회 오류: {e}")
-        return "예약 내역을 불러올 수 없습니다.", 500
+                calendarGrid.appendChild(dayElement);
+            }
+            
+            // 오늘 날짜 자동 선택
+            if (currentDate.getMonth() === today.getMonth() && 
+                currentDate.getFullYear() === today.getFullYear()) {
+                const todayElement = calendarGrid.querySelector('.today');
+                if (todayElement && !todayElement.classList.contains('disabled')) {
+                    selectDate(today, todayElement);
+                }
+            }
+        }
+
+        // 날짜 선택
+        function selectDate(date, element) {
+            // 기존 선택 제거
+            document.querySelectorAll('.calendar-day.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // 새로운 선택
+            element.classList.add('selected');
+            selectedDateObj = new Date(date);
+            
+            const dateStr = date.toISOString().split('T')[0];
+            document.getElementById('selectedDate').value = dateStr;
+            
+            // 예약된 시간 가져오기
+            fetchReservedTimes(dateStr);
+            
+            // 시간 선택 초기화
+            resetTimeSelection();
+            updateSummary();
+        }
+
+        // 예약된 시간 가져오기
+        function fetchReservedTimes(date) {
+            const trainerId = document.getElementById('trainerId').value;
+            
+            fetch('/api/reserved-times/' + trainerId + '/' + date)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        reservedTimes = data.reserved_times || [];
+                    } else {
+                        reservedTimes = [];
+                    }
+                    updateTimeSlots();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    reservedTimes = [];
+                    updateTimeSlots();
+                });
+        }
+
+        // 시간 슬롯 업데이트
+        function updateTimeSlots() {
+            const timeSlotsContainer = document.getElementById('timeSlots');
+            timeSlotsContainer.innerHTML = '';
+
+            timeSlots.forEach(time => {
+                const timeSlot = document.createElement('div');
+                timeSlot.className = 'time-slot';
+                timeSlot.textContent = time;
+                
+                const isReserved = reservedTimes.includes(time);
+                if (isReserved) {
+                    timeSlot.classList.add('disabled');
+                    timeSlot.title = '예약 불가 (이미 예약됨)';
+                } else {
+                    timeSlot.addEventListener('click', () => selectTimeSlot(timeSlot, time));
+                    timeSlot.title = '클릭하여 선택';
+                }
+                
+                timeSlotsContainer.appendChild(timeSlot);
+            });
+        }
+
+        // 시간 슬롯 선택
+        function selectTimeSlot(element, time) {
+            if (selectedTimeSlot) {
+                selectedTimeSlot.classList.remove('selected');
+            }
+            
+            element.classList.add('selected');
+            selectedTimeSlot = element;
+            selectedTime = time;
+            document.getElementById('selectedTime').value = time;
+            
+            updateSummary();
+            updateSubmitButton();
+        }
+
+        // 인원 수 선택 설정
+        function setupPeopleSelector() {
+            const peopleOptions = document.querySelectorAll('.people-option');
+            peopleOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    peopleOptions.forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    selectedPeople = parseInt(option.dataset.value);
+                    document.getElementById('numPeople').value = selectedPeople;
+                    updateSummary();
+                });
+            });
+        }
+
+        // 요약 업데이트
+        function updateSummary() {
+            const summaryDiv = document.getElementById('selectionSummary');
+            const summaryContent = document.getElementById('summaryContent');
+            
+            if (selectedDateObj && selectedTime) {
+                const dateStr = selectedDateObj.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    weekday: 'long'
+                });
+                
+                summaryContent.innerHTML = 
+                    '<strong>날짜:</strong> ' + dateStr + '<br>' +
+                    '<strong>시간:</strong> ' + selectedTime + '<br>' +
+                    '<strong>인원:</strong> ' + selectedPeople + '명';
+                
+                summaryDiv.style.display = 'block';
+            } else {
+                summaryDiv.style.display = 'none';
+            }
+        }
+
+        // 제출 버튼 업데이트
+        function updateSubmitButton() {
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = !(selectedDateObj && selectedTime);
+        }
+
+        // 시간 선택 초기화
+        function resetTimeSelection() {
+            if (selectedTimeSlot) {
+                selectedTimeSlot.classList.remove('selected');
+                selectedTimeSlot = null;
+            }
+            selectedTime = '';
+            document.getElementById('selectedTime').value = '';
+            updateSubmitButton();
+        }
+
+        // 폼 제출 처리
+        document.getElementById('consultationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!selectedDateObj || !selectedTime) {
+                alert('날짜와 시간을 모두 선택해주세요.');
+                return;
+            }
+            
+            const trainerName = '{{ trainer.tname }}';
+            const dateStr = selectedDateObj.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: 'long', 
+                day: 'numeric',
+                weekday: 'long'
+            });
+            
+            const confirmDetails = 
+                '<strong>트레이너:</strong> ' + trainerName + '<br>' +
+                '<strong>날짜:</strong> ' + dateStr + '<br>' +
+                '<strong>시간:</strong> ' + selectedTime + '<br>' +
+                '<strong>인원:</strong> ' + selectedPeople + '명<br><br>' +
+                '위 정보로 상담 신청을 진행하시겠습니까?';
+            
+            document.getElementById('confirmDetails').innerHTML = confirmDetails;
+            document.getElementById('confirmModal').style.display = 'block';
+        });
+
+        // 상담 신청 확정
+        function confirmConsultation() {
+            const formData = {
+                trainer_id: document.getElementById('trainerId').value,
+                consultation_date: selectedDateObj.toISOString().split('T')[0],
+                consultation_time: selectedTime,
+                num_people: selectedPeople
+            };
+
+            const confirmBtn = document.querySelector('#confirmModal .modal-btn');
+            const originalText = confirmBtn.textContent;
+            confirmBtn.textContent = '처리 중...';
+            confirmBtn.disabled = true;
+
+            fetch('/api/create-consultation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('confirmModal').style.display = 'none';
+                if (data.success) {
+                    document.getElementById('successModal').style.display = 'block';
+                    // 예약된 시간 업데이트
+                    reservedTimes.push(selectedTime);
+                    updateTimeSlots();
+                    resetTimeSelection();
+                } else {
+                    alert('❌ 상담 신청 실패: ' + (data.message || '알 수 없는 오류'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ 상담 신청 중 오류가 발생했습니다.');
+                document.getElementById('confirmModal').style.display = 'none';
+            })
+            .finally(() => {
+                confirmBtn.textContent = originalText;
+                confirmBtn.disabled = false;
+            });
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+        }
+
+        // 메인 페이지로 이동
+        function goToMain() {
+            window.location.href = '/';
+        }
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            initCalendar();
+            setupPeopleSelector();
+        });
+
+        // 모달 외부 클릭 시 닫기
+        window.addEventListener('click', function(event) {
+            const confirmModal = document.getElementById('confirmModal');
+            const successModal = document.getElementById('successModal');
+            
+            if (event.target === confirmModal) {
+                confirmModal.style.display = 'none';
+            }
+            if (event.target === successModal) {
+                successModal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

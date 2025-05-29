@@ -51,28 +51,7 @@
             <br>
             <label>새 이미지 추가:</label><br>
             <input type="file" name="new_images" multiple accept="image/*"><br><br>
-            
-            <br><br>
-            <button type="submit">수정하기</button>
-
-            <!-- 수정 안하고 나가기 버튼 -->
-            <button type="button" onclick="window.location.href='/profile/{{ trainer_id }}'">
-                수정하지 않고 나가기
-            </button>
-
-
-            {% if session['is_admin'] %}
-                <br><br>
-                <button type="button" onclick="confirmDelete()" style="background-color: crimson; color: white;">프로필 삭제하기</button>
-            {% endif %}
-
-            <script>
-            function confirmDelete() {
-                if (confirm("프로필을 삭제하시겠습니까? 삭제 후에는 복구할 수 없습니다.")) {
-                    window.location.href = "{{ url_for('edit_profile.delete_profile', trainer_id=trainer_id) }}";
-                }
-            }
-            </script>
+            <button type="submit">수정 완료</button>
         </form>
     </div>
 </body>

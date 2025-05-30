@@ -110,17 +110,21 @@ def login():
             session['uname'] = user['uname']
             session['is_admin'] = user['is_admin']
 
+            # pending_traits 저장된 경우 사용자 답변 테이블에 저장
             if 'pending_traits' in session:
                 traits = session.pop('pending_traits')
-                with get_db() as conn:
-                    with conn.cursor() as cursor:
-                        cursor.execute("""
-                            INSERT INTO user_answers (user_id, trait_1, trait_2, trait_3, trait_4, trait_5)
-                            VALUES (%s, %s, %s, %s, %s, %s)
-                        """, (user['user_id'], traits['trait_1'], traits['trait_2'], traits['trait_3'], traits['trait_4'], traits['trait_5']))
-                        conn.commit()
+                with conn.cursor() as cursor:  # 기존 conn 재사용
+                    cursor.execute("""
+                        INSERT INTO user_answers (user_id, trait_1, trait_2, trait_3, trait_4, trait_5)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (
+                        user['user_id'],
+                        traits['trait_1'], traits['trait_2'],
+                        traits['trait_3'], traits['trait_4'], traits['trait_5']
+                    ))
+                    conn.commit()
 
-            # next 파라미터 확인 - 로그인 후 원래 페이지로 돌아가기
+            # 로그인 후 이동할 URL 설정
             next_url = request.args.get('next')
             if next_url:
                 redirect_url = next_url
@@ -128,10 +132,15 @@ def login():
                 redirect_url = '/admin/consultations'
             else:
                 redirect_url = '/'
-                
+
             return jsonify({'success': True, 'redirect': redirect_url})
+
+    except Exception as e:
+        print(f"[로그인 오류] {e}")
+        return jsonify({'success': False, 'message': '서버 내부 오류가 발생했습니다.'})
     finally:
         conn.close()
+
 
 # 이미지 불러오기 라우트 (수정된 버전)
 @app.route('/image/<int:image_id>')

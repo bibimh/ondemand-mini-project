@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request, redirect, session, jsonify, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
-from profile_routes import profile_bp
-from profile_edit_routes import edit_profile_bp
-from mainpage_route import mainpage_bp
-from consultation_routes import consultation_bp
+from routes.profile_routes import profile_bp
+from routes.profile_edit_routes import edit_profile_bp
+from routes.mainpage_route import mainpage_bp
+from routes.consultation_routes import consultation_bp
 from db.db import get_all_trainers
 import io
 import pymysql

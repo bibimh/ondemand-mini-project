@@ -4,6 +4,7 @@ from flask import Blueprint, session, render_template, request, redirect, url_fo
 import pymysql
 from datetime import datetime
 import base64
+import re
 
 edit_profile_bp = Blueprint('edit_profile', __name__)
 
@@ -92,12 +93,25 @@ def edit_profile(trainer_id):
 
                 # 새 이미지 추가
                 new_files = request.files.getlist('new_images')
-                cursor.execute("SELECT COUNT(*) as count FROM site_images WHERE name LIKE %s", (f"trainer{trainer_id}_%",))
-                existing_count = cursor.fetchone()['count']
+                # 기존 이름들 가져오기
+                cursor.execute("SELECT name FROM site_images WHERE name LIKE %s", (f"trainer{trainer_id}_%",))
+                existing_names = cursor.fetchall()
 
+                # 가장 높은 번호 구하기
+                import re
+                max_index = 0
+                for row in existing_names:
+                    match = re.match(rf'trainer{trainer_id}_(\d+)', row['name'])
+                    if match:
+                        index = int(match.group(1))
+                        if index > max_index:
+                            max_index = index
+
+                # 새 이미지 추가
+                new_files = request.files.getlist('new_images')
                 for i, file in enumerate(new_files):
                     if file and file.filename:
-                        name = f"trainer{trainer_id}_{existing_count + i + 1}"
+                        name = f"trainer{trainer_id}_{max_index + i + 1}"  # ✅ 여기에서 기존 변수명만 바꿔주면 OK
                         data = file.read()
                         cursor.execute("""
                             INSERT INTO site_images (name, image_data, description)

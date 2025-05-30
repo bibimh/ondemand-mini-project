@@ -22,7 +22,7 @@ def get_db():
         cursorclass=pymysql.cursors.DictCursor
     )
 
-# 트레이너 매칭 라우트
+# 트레이너 매칭 라우트 (수정됨)
 @app.route('/match', methods=['GET', 'POST'])
 def match_trainer():
     user_id = session.get('user_id')
@@ -42,6 +42,7 @@ def match_trainer():
                     VALUES (%s, %s, %s, %s, %s, %s)
                 """, (user_id, trait_1, trait_2, trait_3, trait_4, trait_5))
                 conn.commit()
+            conn.close()
         else:
             session['pending_traits'] = {
                 'trait_1': trait_1,
@@ -53,16 +54,19 @@ def match_trainer():
 
         conn = get_db()
         with conn.cursor() as cursor:
+            # ★ 수정된 쿼리 - trainer_id를 image_id로 사용하고 숨김 트레이너 제외
             cursor.execute("""
-                SELECT trainer_id, tname, image_id, (
+                SELECT trainer_id, tname, trainer_id as image_id, (
                     (trait_1 = %s) + (trait_2 = %s) + (trait_3 = %s) +
                     (trait_4 = %s) + (trait_5 = %s)
                 ) AS match_score
                 FROM trainers
+                WHERE is_hidden = 0
                 ORDER BY match_score DESC
                 LIMIT 1
             """, (trait_1, trait_2, trait_3, trait_4, trait_5))
             best_match = cursor.fetchone()
+        conn.close()
 
         return render_template('match_result.html', trainer=best_match)
 
@@ -234,17 +238,20 @@ def signup():
         return jsonify({'success': False, 'field': 'id', 'message': '아이디는 6~20자여야 합니다.'})
 
     conn = get_db()
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT * FROM users WHERE login_id = %s", (login_id,))
-        if cursor.fetchone():
-            return jsonify({'success': False, 'field': 'id', 'message': '이미 있는 아이디입니다.'})
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM users WHERE login_id = %s", (login_id,))
+            if cursor.fetchone():
+                return jsonify({'success': False, 'field': 'id', 'message': '이미 있는 아이디입니다.'})
 
-        password_hash = generate_password_hash(password)
-        cursor.execute("""
-            INSERT INTO users (login_id, password_hash, uname, phone, gender, birthday)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (login_id, password_hash, uname, phone, gender, birthday))
-        conn.commit()
+            password_hash = generate_password_hash(password)
+            cursor.execute("""
+                INSERT INTO users (login_id, password_hash, uname, phone, gender, birthday)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (login_id, password_hash, uname, phone, gender, birthday))
+            conn.commit()
+    finally:
+        conn.close()
 
     return jsonify({'success': True, 'message': '회원가입이 완료되었습니다. 로그인해주세요.'})
 
@@ -258,12 +265,13 @@ def logout():
 @app.route('/trainer/<int:trainer_id>')
 def trainer_profile(trainer_id):
     conn = get_db()
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT * FROM trainers WHERE trainer_id = %s", (trainer_id,))
-        trainer = cursor.fetchone()
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM trainers WHERE trainer_id = %s", (trainer_id,))
+            trainer = cursor.fetchone()
+    finally:
+        conn.close()
     return render_template('trainer_profile.html', trainer=trainer)
-
-# ★ 기존 admin_consultations 라우트 제거 (consultation_routes.py에서 처리)
 
 # 블루프린트 등록
 app.register_blueprint(profile_bp)

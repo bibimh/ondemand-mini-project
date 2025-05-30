@@ -26,7 +26,7 @@ def profile(trainer_id):
                 SELECT image_data FROM site_images
                 WHERE name LIKE %s
                 ORDER BY uploaded_at ASC
-            """, (f"trainer{trainer_id}%",))
+            """, (f"trainer{trainer_id}_%",))
             image_rows = cursor.fetchall()
 
         image_sources = [

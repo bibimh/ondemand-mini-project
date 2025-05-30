@@ -5,8 +5,12 @@ from profile_routes import profile_bp
 from profile_edit_routes import edit_profile_bp
 from mainpage_route import mainpage_bp
 from consultation_routes import consultation_bp
+from config import logging, setup_logging
+from utils.log_utils import log_user_action, log_admin_action
 import io
 import pymysql
+
+setup_logging()
 
 app = Flask(__name__)
 app.secret_key = 'a9f3b7d2e1c4f6a8'
@@ -36,6 +40,8 @@ if __name__ == "__main__":
 # 로그인 페이지
 @app.route('/')
 def home():
+    # log_admin_action(admin_id=session['admin_id'], action='관리자 대시보드 접속')
+    log_admin_action(action='로그인 페이지 접속') 
     return render_template('login.html')
 
 # 로그인 페이지 (GET), 로그인 처리 (POST)
@@ -190,6 +196,7 @@ def trainer_profile(trainer_id):
 # Fitpick 헬스장 정보 페이지
 @app.route('/info')
 def info_page():
+    log_user_action()
     return render_template('info.html', user_id=session.get('user_id'))
 
 # Fitpick 헬스장 이미지 업로드
@@ -212,5 +219,19 @@ app.register_blueprint(edit_profile_bp)
 app.register_blueprint(mainpage_bp, url_prefix='/main')
 app.register_blueprint(consultation_bp)
 
+# @app.before_request
+# def log_every_request():
+#     # 요청 대상이 정적 파일이나 favicon.ico인 경우 제외
+#     if request.path.startswith('/static/') or request.path == '/favicon.ico':
+#         return
+#     # 로그 기록
+#     logging.info(f'{request.method} {request.path} - 요청 발생')
+
+#     log_user_action(
+#         user_id=session.get('user_id'),
+#         action=f'{request.method} {request.path}',
+#         target_table='',    
+#         description='자동 기록된 요청'
+#     )
 if __name__ == '__main__':
     app.run(debug=True)

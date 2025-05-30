@@ -9,16 +9,16 @@ import io
 import pymysql
 
 app = Flask(__name__)
-app.secret_key = 'a9f3b7d2e1c4f6a8'
+app.secret_key = ''
 
 # DB 연결 함수
 def get_db():
     return pymysql.connect(
-        host='192.168.40.14',
-        user='fitpickuser',
-        password='fitpick1234',
-        db='fitpick',
-        charset='utf8mb4',
+        host='',
+        user='',
+        password='',
+        db='',
+        charset='',
         cursorclass=pymysql.cursors.DictCursor
     )
 

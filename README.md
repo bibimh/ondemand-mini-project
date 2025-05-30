@@ -1,4 +1,5 @@
-```MERGE_FITPICK/
+```
+MERGE_FITPICK/
 ├── app.py # 플라스크 메인 실행 파일
 ├── requirements.txt # 의존성 리스트
 ├── .gitignore # Git 무시 파일 목록
@@ -56,4 +57,5 @@
 ├── init_images.py # 이미지 초기화 관련 스크립트
 ├── mainpage_route.py # 메인페이지 라우트
 ├── profile_edit_routes.py # 프로필 수정 라우트
-└── profile_routes.py # 프로필 관련 라우트```
+└── profile_routes.py # 프로필 관련 라우트
+```

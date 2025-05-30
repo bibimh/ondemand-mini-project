@@ -25,7 +25,7 @@
             <div class="left-box">
                 <!-- ★ 호버 효과가 적용된 큰 이미지 -->
                 <a href="/match" class="image-link">
-                    <img src="/image/37" alt="트레이너1">
+                    <img src="/image/49" alt="트레이너1">
                     <div class="image-overlay">
                         <div class="overlay-text">
                             <h3>내 성향에 맞는<br>트레이너로 선택하자</h3>
@@ -46,7 +46,7 @@
                     {% set trainer = trainers[i] %}
                     <!-- 등록된 트레이너가 있는 경우 -->
                     <a href="/profile/{{ trainer.trainer_id }}" class="trainer-item">
-                        <img src="/image/{{ trainer.image_id or 48 }}" alt="{{ trainer.tname }}">
+                        <img src="/image/{{ trainer.trainer_id or 48 }}" alt="{{ trainer.tname }}">
                         <div class="trainer-overlay">
                             <div class="trainer-name">{{ trainer.tname }}</div>
                         </div>

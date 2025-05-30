@@ -139,7 +139,7 @@ def get_image(image_id):
                 SELECT image_data 
                 FROM site_images 
                 WHERE name LIKE %s 
-                ORDER BY uploaded_at ASC 
+                ORDER BY name ASC 
                 LIMIT 1
             """, (f"trainer{image_id}_%",))
             row = cursor.fetchone()

@@ -54,17 +54,28 @@ def match_trainer():
 
         conn = get_db()
         with conn.cursor() as cursor:
-            # ★ 수정된 쿼리 - trainer_id를 image_id로 사용하고 숨김 트레이너 제외
+            # 매칭 점수를 계산하여 가장 높은 트레이너를 찾는 쿼리
+            # 각 trait가 일치하는 경우 1점씩 부여하고, 총합을 match_score로 계산
+            # 이 점수를 20배하여 match_percentage로 변환
+            # match_score는 0~5 사이의 값이므로, match_percentage는 0~100 사이가 됨
             cursor.execute("""
-                SELECT trainer_id, tname, trainer_id as image_id, (
+                SELECT trainer_id, tname, trainer_id as image_id,
+                (
                     (trait_1 = %s) + (trait_2 = %s) + (trait_3 = %s) +
                     (trait_4 = %s) + (trait_5 = %s)
-                ) AS match_score
+                ) AS match_score,
+                ROUND((
+                    (trait_1 = %s) + (trait_2 = %s) + (trait_3 = %s) +
+                    (trait_4 = %s) + (trait_5 = %s)
+                ) * 20, 0) AS match_percentage
                 FROM trainers
                 WHERE is_hidden = 0
                 ORDER BY match_score DESC
                 LIMIT 1
-            """, (trait_1, trait_2, trait_3, trait_4, trait_5))
+            """, (
+                trait_1, trait_2, trait_3, trait_4, trait_5, 
+                trait_1, trait_2, trait_3, trait_4, trait_5  
+            ))
             best_match = cursor.fetchone()
         conn.close()
 

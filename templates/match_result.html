@@ -1,3 +1,5 @@
 <div id="popup-name" style="display:none;">{{ trainer.tname }} 트레이너</div>
+<!-- 매칭률 추가 -->
+<div id="popup-percent" style="display: none;">{{ trainer.match_percentage }}</div>
 <img id="popup-img" src="{{ url_for('get_image', image_id=trainer.image_id or 48) }}" style="display:none;">
 <a id="popup-link" href="{{ url_for('profile.profile', trainer_id=trainer.trainer_id) }}" style="display:none;"></a>

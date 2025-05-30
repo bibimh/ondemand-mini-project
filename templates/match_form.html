@@ -100,7 +100,7 @@
     width:750px;
     text-align: center;
     box-shadow: 0 15px 40px rgba(0,0,0,0.2);
-    max-height: 80vh;
+    max-height: 85vh;
     overflow-y: auto;
     transition: all 0.3s ease;
   }
@@ -198,61 +198,66 @@
   <div id="overlay"></div>
   <div id="popup">
     <h3 id="trainer-name"></h3>
+    <p id="match-percent" style="font-size: 1.1rem; color: #ff6f61; margin-top: -10px; margin-bottom: 20px; font-weight: 500;"></p>
     <img id="trainer-img" src="" alt="trainer">
     <p><a id="profile-link" href="#">트레이너 프로필 보러가기</a></p>
-    <button onclick="closePopup()">닫기</button>
+    <button onclick="closePopup()">다시하기</button>
+    <button onclick="location.href='{{ url_for('mainpage.mainpage') }}'">닫기</button>
   </div>
 
-  <script>
-    const answers = {};
-    let step = 1;
+<script>
+  const answers = {};
+  let step = 1;
 
-    const form = document.getElementById('traitForm');
-    const questions = document.querySelectorAll('.question');
+  const form = document.getElementById('traitForm');
+  const questions = document.querySelectorAll('.question');
 
-    questions.forEach((q) => {
-      q.querySelectorAll('button').forEach(btn => {
-        btn.addEventListener('click', () => {
-          answers[`trait_${step}`] = btn.dataset.value;
-          q.classList.remove('active');
+  questions.forEach((q) => {
+    q.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        answers[`trait_${step}`] = btn.dataset.value;
+        q.classList.remove('active');
 
-          if (step < 5) {
-            step++;
-            document.querySelector(`.question[data-step="${step}"]`).classList.add('active');
-          } else {
-            const formData = new FormData();
-            for (const key in answers) {
-              formData.append(key, answers[key]);
-            }
-
-            fetch('/match', {
-              method: 'POST',
-              body: formData
-            })
-            .then(res => res.text())
-            .then(html => {
-              const doc = new DOMParser().parseFromString(html, 'text/html');
-              const name = doc.getElementById('popup-name').textContent;
-              const img = doc.getElementById('popup-img').getAttribute('src');
-              const link = doc.getElementById('popup-link').getAttribute('href');
-
-              document.getElementById('trainer-name').innerText = name;
-              document.getElementById('trainer-img').src = img;
-              document.getElementById('profile-link').href = link;
-
-              document.getElementById('overlay').style.display = 'block';
-              document.getElementById('popup').style.display = 'block';
-            });
+        if (step < 5) {
+          step++;
+          document.querySelector(`.question[data-step="${step}"]`).classList.add('active');
+        } else {
+          const formData = new FormData();
+          for (const key in answers) {
+            formData.append(key, answers[key]);
           }
-        });
+
+          fetch('/match', {
+            method: 'POST',
+            body: formData
+          })
+          .then(res => res.text())
+          .then(html => {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            const name = doc.getElementById('popup-name').textContent;
+            const percent = doc.getElementById('popup-percent').textContent;
+            const img = doc.getElementById('popup-img').getAttribute('src');
+            const link = doc.getElementById('popup-link').getAttribute('href');
+
+            document.getElementById('trainer-name').innerText = name;
+            document.getElementById('match-percent').innerText = `💖 매칭률 ${percent} % 💖`;
+            document.getElementById('trainer-img').src = img;
+            document.getElementById('profile-link').href = link;
+
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('popup').style.display = 'block';
+          });
+        }
       });
     });
+  });
 
-    function closePopup() {
-      document.getElementById('overlay').style.display = 'none';
-      document.getElementById('popup').style.display = 'none';
-      window.location.reload();
-    }
-  </script>
+  function closePopup() {
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('popup').style.display = 'none';
+    window.location.reload();
+  }
+</script>
+
 </body>
 </html>

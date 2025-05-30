@@ -6,11 +6,13 @@ from collections import defaultdict
 from datetime import datetime
 import base64
 from flask import jsonify
+from utils.log_utils import log_action
 
 profile_bp = Blueprint('profile', __name__)
 
 @profile_bp.route('/profile/<int:trainer_id>', methods=['GET', 'POST'])
 def profile(trainer_id):
+    log_action(target_table='trainers', description='프로필 조회')
     with get_db() as conn:
         conn.ping(reconnect=True)
         user_id = session.get('user_id')

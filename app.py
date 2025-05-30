@@ -4,9 +4,13 @@ from routes.profile_routes import profile_bp
 from routes.profile_edit_routes import edit_profile_bp
 from routes.mainpage_route import mainpage_bp
 from routes.consultation_routes import consultation_bp
+from config import setup_logging
+from utils.log_utils import log_action
 from db.db import get_all_trainers
 import io
 import pymysql
+
+setup_logging()
 
 app = Flask(__name__)
 app.secret_key = 'a9f3b7d2e1c4f6a8'
@@ -86,6 +90,7 @@ def match_trainer():
 # 로그인 라우트
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    log_action(target_table='users', description='로그인 시도')
     if request.method == 'GET':
         return render_template('login.html')
 

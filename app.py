@@ -124,17 +124,13 @@ def get_image(image_id):
     conn = get_db()
     try:
         with conn.cursor() as cursor:
-            # 먼저 image_id로 직접 조회 시도
+            # 1차: image_id 직접 조회
             cursor.execute("SELECT image_data FROM site_images WHERE image_id = %s", (image_id,))
             row = cursor.fetchone()
-            
             if row and row['image_data']:
-                return send_file(
-                    io.BytesIO(row['image_data']),
-                    mimetype='image/jpeg'
-                )
-            
-            # 직접 조회 실패 시, trainer_id로 간주하여 해당 트레이너의 첫 번째 이미지 조회
+                return send_file(io.BytesIO(row['image_data']), mimetype='image/jpeg')
+
+            # 2차: trainer_id로 추정해서 이름 패턴으로 조회
             cursor.execute("""
                 SELECT image_data 
                 FROM site_images 
@@ -143,24 +139,28 @@ def get_image(image_id):
                 LIMIT 1
             """, (f"trainer{image_id}_%",))
             row = cursor.fetchone()
-            
             if row and row['image_data']:
-                return send_file(
-                    io.BytesIO(row['image_data']),
-                    mimetype='image/jpeg'
-                )
+                return send_file(io.BytesIO(row['image_data']), mimetype='image/jpeg')
+
+            # 3차: 기본 이미지 반환 (image_id=48)
+            cursor.execute("SELECT image_data FROM site_images WHERE image_id = 48")
+            row = cursor.fetchone()
+            if row and row['image_data']:
+                return send_file(io.BytesIO(row['image_data']), mimetype='image/jpeg')
+
     finally:
         conn.close()
-    
+
     return 'Image Not Found', 404
 
 # 트레이너 전용 이미지 라우트 추가
 @app.route('/trainer-image/<int:trainer_id>')
 def get_trainer_image(trainer_id):
-    """트레이너 ID로 해당 트레이너의 첫 번째 이미지를 가져오는 전용 라우트"""
+    """트레이너 ID로 해당 트레이너의 첫 번째 이미지를 가져오고, 없으면 기본 이미지 반환"""
     conn = get_db()
     try:
         with conn.cursor() as cursor:
+            # 1차: trainer{ID}_ 로 시작하는 이미지 검색
             cursor.execute("""
                 SELECT image_data 
                 FROM site_images 
@@ -169,14 +169,20 @@ def get_trainer_image(trainer_id):
                 LIMIT 1
             """, (f"trainer{trainer_id}_%",))
             row = cursor.fetchone()
-            
             if row and row['image_data']:
-                return send_file(
-                    io.BytesIO(row['image_data']),
-                    mimetype='image/jpeg'
-                )
+                return send_file(io.BytesIO(row['image_data']), mimetype='image/jpeg')
+
+            # 2차: 기본 이미지 (image_id=48) 가져오기
+            cursor.execute("SELECT image_data FROM site_images WHERE image_id = 48")
+            row = cursor.fetchone()
+            if row and row['image_data']:
+                return send_file(io.BytesIO(row['image_data']), mimetype='image/jpeg')
+
     finally:
         conn.close()
+
+    return 'Image Not Found', 404
+
     
     # 기본 이미지 반환 (image_id=48 또는 1)
     conn = get_db()

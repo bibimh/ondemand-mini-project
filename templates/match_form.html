@@ -88,34 +88,66 @@
       z-index: 999;
     }
 
-    #popup {
-      z-index: 1000;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      border-radius: 20px;
-      padding: 30px;
-      width: 350px;
-      text-align: center;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
+  #popup {
+    z-index: 1000;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 24px;
+    padding: 35px 30px 30px;
+    width:750px;
+    text-align: center;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    max-height: 80vh;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+  }
 
-    #popup img {
-      width: 100%;
-      border-radius: 16px;
-      margin-bottom: 15px;
-    }
+  #popup h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #222;
+    margin-bottom: 20px;
+  }
 
-    #popup button {
-      background: var(--color-2);
-      border: none;
-      border-radius: 10px;
-      padding: 10px 20px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
+  #popup img {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: contain; /* 잘리지 않게 */
+    max-height: 500px;    /* 세로 크기 늘리기 */
+    margin-bottom: 20px;
+    background: #ffffff; /* 이미지 없는 경우 대비 배경 */
+  }
 
+  #popup a {
+    display: inline-block;
+    margin-bottom: 20px;
+    font-size: 1rem;
+    color: #444;
+    font-weight: 500;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  #popup a:hover {
+    color: rgb(0, 0, 0);
+  }
+
+  #popup button {
+    background: var(--color-5);
+    border: none;
+    padding: 10px 22px;
+    font-size: 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+
+  #popup button:hover {
+    background: var(--color-6);
+}
     @keyframes fade {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }

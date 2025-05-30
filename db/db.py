@@ -151,25 +151,3 @@ def get_trainer_avg_rating(trainer_id):
                 'avg_rating': round(result['avg_rating'], 1) if result['avg_rating'] else 0,
                 'review_count': result['review_count']
             }# db.py
-
-def get_all_trainers():
-    with conn.cursor() as cursor:
-        sql = "SELECT trainer_id, tname, image_id FROM trainers LIMIT 9;"
-        cursor.execute(sql)
-        result = cursor.fetchall()
-        for row in result:
-            # image_id가 NULL일 경우 기본값 48로 대체
-            if row['image_id'] is None:
-                row['image_id'] = 48
-        return result
-    
-import pymysql
-
-conn = pymysql.connect(
-    host='192.168.40.14',
-    user='fitpickuser',
-    password='fitpick1234',
-    db='fitpick',
-    charset='utf8mb4',
-    cursorclass=pymysql.cursors.DictCursor
-)
